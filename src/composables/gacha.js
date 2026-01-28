@@ -211,20 +211,44 @@ export function useGacha() {
       triggerToast("로그아웃 실패");
     }
   };
-
   const submitSave = async () => {
-    if (!auth.currentUser) return triggerToast("로그인이 필요합니다.");
+    // 1. 로그인 여부 확인
+    if (!isLoggedIn.value || !auth.currentUser) {
+      authMode.value = "login";
+      isSaveModalOpen.value = true;
+      return;
+    }
+
+    // 2. 현재 필드(squad)가 비어있는지 확인
+    if (Object.keys(squad.value).length === 0) {
+      triggerToast("저장할 팀이 없습니다. 가챠를 먼저 해주세요!");
+      return;
+    }
 
     try {
-      await setDoc(doc(db, "squads", auth.currentUser.uid), {
-        userId: saveData.value.id,
+      const userRef = dbRef(database, `users/${auth.currentUser.uid}`);
+
+      // 3. 이미 저장된 데이터가 있는지 먼저 가져와보기 (선택 사항)
+      const snapshot = await get(userRef);
+
+      if (snapshot.exists()) {
+        // 이미 데이터가 있다면? -> 덮어쓸지 물어보거나 메시지 출력
+        // 여기서는 바로 덮어쓰거나 알림을 띄울 수 있습니다.
+        console.log("기존 팀 데이터 발견:", snapshot.val());
+      }
+
+      // 4. 데이터 저장
+      await set(userRef, {
+        nickname: auth.currentUser.displayName,
         squad: squad.value,
-        updatedAt: new Date(),
+        updatedAt: Date.now(),
       });
-      triggerToast("구글 서버에 안전하게 저장됨! ☁️");
-      isSaveModalOpen.value = false;
+
+      triggerToast("성공적으로 저장되었습니다!");
+      isSaveModalOpen.value = false; // 저장 후 모달 닫기
     } catch (e) {
-      triggerToast("저장 중 오류 발생");
+      console.error("저장 에러:", e);
+      triggerToast("저장 중 오류가 발생했습니다.");
     }
   };
 
