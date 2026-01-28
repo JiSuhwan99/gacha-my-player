@@ -13,12 +13,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 20px;
+  padding: 30px;
   color: #f8fafc;
 }
 header {
   text-align: center;
-  padding: 20px 0;
   width: 100%;
   display: flex;
   justify-content: center;
@@ -34,12 +33,17 @@ header {
 .auth-area {
   position: absolute;
   right: 0;
-  top: 20px;
+  top: 0;
 }
 .user-logged-in {
   display: flex;
   flex-flow: column-reverse;
+  justify-content: flex-start;
+  align-items: flex-end;
   gap: 10px;
+}
+.user-info {
+  font-size: 0.8rem;
 }
 .login-btn {
   background: transparent;
@@ -116,22 +120,119 @@ header {
   color: #00ffcc;
   text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
   line-height: 100%;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 .subtitle {
   line-height: 100%;
 }
 .main-display {
+  width: 100%;
+  display: flex;
+  flex-flow: row;
+  justify-content: center;
+  position: relative;
+}
+.field-area {
   width: fit-content;
-  max-width: auto; /* 세로형 축구장 느낌 */
   border: 2px solid #fff;
   border-radius: 10px;
   position: relative;
   padding: 30px 100px;
   margin-top: 30px;
-  background: rgba(94, 94, 94, 0.1);
+  background: #121213;
+  z-index: 100;
+}
+.spacer {
+  width: 200px; /* (정보창 너비 300px + 간격 20px) 와 똑같이 설정 */
+  flex-shrink: 0;
+  margin-top: 30px;
+}
+.info-sidebar {
+  width: 220px;
+  margin-top: 30px;
+  background: rgba(255, 255, 255, 0.05); /* 반투명 배경 */
+  backdrop-filter: blur(10px); /* 유리 효과 */
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 14px;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  padding: 14px 14px 14px 44px;
+  margin-left: -30px;
+  z-index: 50;
 }
 
+.sidebar-header {
+  margin-bottom: 24px;
+}
+
+.sidebar-header .tag {
+  font-size: 10px;
+  background: #3b82f6; /* 포인트 컬러 */
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.sidebar-header h2 {
+  margin-top: 8px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.info-card {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: transform 0.2s;
+}
+
+.card-label {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.card-value {
+  font-size: 24px;
+  font-weight: 800;
+  font-family: "Inter", sans-serif;
+  color: #e2e8f0;
+}
+
+/* 평균 OVR 강조 스타일 */
+.info-card.highlight .card-value {
+  color: #60a5fa;
+  text-shadow: 0 0 15px rgba(96, 165, 250, 0.4);
+}
+
+.card-value.team-color {
+  font-size: 0.6rem;
+  color: #e2e8f0;
+}
+.card-value.team-color span {
+  background: #e2e8f0;
+  margin-left: 3px;
+  color: #121213;
+  padding: 2px;
+  border-radius: 5px;
+}
+.card-value.team-color:last-child {
+  font-weight: 500;
+  color: #a3ff97;
+}
+
+.footer-msg {
+  margin-top: 20px;
+  font-size: 12px;
+  color: #64748b;
+  text-align: center;
+  line-height: 1.6;
+}
 .field {
   display: flex;
   flex-direction: column;
@@ -205,7 +306,23 @@ header {
     inset 0 0 15px rgba(255, 255, 255, 0.5); /* 안쪽 광택감 */
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
+.team-dot {
+  position: absolute;
+  top: 8px; /* 위에서 8px */
+  left: 8px; /* 오른쪽에서 8px */
+  width: 40px; /* 도트 크기 */
+  height: 40px;
+  border-radius: 50%; /* 완벽한 원 */
 
+  /* 영롱한 효과를 위한 레이어 */
+  border: 2px solid rgba(255, 255, 255, 0.8); /* 흰색 테두리 */
+  box-shadow:
+    0 0 8px rgba(0, 0, 0, 0.5),
+    /* 그림자 */ 0 0 12px currentColor; /* 빛나는 네온 효과 */
+
+  z-index: 10; /* 이미지보다 위에 오도록 */
+  transition: transform 0.2s ease-in-out;
+}
 /* 배경 이미지 처리 */
 .p-img {
   position: absolute;
@@ -283,6 +400,7 @@ header {
 }
 .player-slot:has(.player-card) {
   border: none !important;
+  cursor: default;
 }
 
 /* 카드가 없는(빈) 슬롯에 마우스를 올렸을 때 */
@@ -457,13 +575,15 @@ header {
 }
 
 .floating-save-btn {
+  width: 180px;
   position: relative;
-  padding: 15px 25px;
+  padding: 15px;
   background: #00ffcc;
   color: #000;
   border: none;
   border-radius: 50px;
-  font-weight: 900;
+  font-weight: 700;
+  font-size: 1rem;
   cursor: pointer;
   box-shadow: 0 5px 20px rgba(0, 255, 204, 0.4);
   transition: transform 0.2s;

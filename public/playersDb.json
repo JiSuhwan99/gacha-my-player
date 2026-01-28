@@ -1,46 +1,256 @@
 {
   "FW": [
-    { "id": 101, "name": "FW-1", "stat": 92, "image": "" },
-    { "id": 102, "name": "FW-2", "stat": 88, "image": "" },
-    { "id": 103, "name": "FW-3", "stat": 85, "image": "" },
-    { "id": 104, "name": "FW-4", "stat": 90, "image": "" },
-    { "id": 105, "name": "FW-5", "stat": 87, "image": "" },
-    { "id": 106, "name": "FW-6", "stat": 84, "image": "" },
-    { "id": 107, "name": "FW-7", "stat": 91, "image": "" },
-    { "id": 108, "name": "FW-8", "stat": 86, "image": "" },
-    { "id": 109, "name": "FW-9", "stat": 89, "image": "" }
+    {
+      "id": 101,
+      "name": "FW-1",
+      "stat": 92,
+      "image": "",
+      "team": "Team Tiger"
+    },
+    {
+      "id": 102,
+      "name": "FW-2",
+      "stat": 88,
+      "image": "",
+      "team": "Blue Dragon"
+    },
+    {
+      "id": 103,
+      "name": "FW-3",
+      "stat": 85,
+      "image": "",
+      "team": "Red Phoenix"
+    },
+    {
+      "id": 104,
+      "name": "FW-4",
+      "stat": 90,
+      "image": "",
+      "team": "Silver Wolf"
+    },
+    {
+      "id": 105,
+      "name": "FW-5",
+      "stat": 87,
+      "image": "",
+      "team": "Golden Eagle"
+    },
+    {
+      "id": 106,
+      "name": "FW-6",
+      "stat": 84,
+      "image": "",
+      "team": "Team Tiger"
+    },
+    {
+      "id": 107,
+      "name": "FW-7",
+      "stat": 91,
+      "image": "",
+      "team": "Blue Dragon"
+    },
+    {
+      "id": 108,
+      "name": "FW-8",
+      "stat": 86,
+      "image": "",
+      "team": "Red Phoenix"
+    },
+    {
+      "id": 109,
+      "name": "FW-9",
+      "stat": 89,
+      "image": "",
+      "team": "Silver Wolf"
+    }
   ],
   "MF": [
-    { "id": 201, "name": "MF-1", "stat": 90, "image": "" },
-    { "id": 202, "name": "MF-2", "stat": 87, "image": "" },
-    { "id": 203, "name": "MF-3", "stat": 84, "image": "" },
-    { "id": 204, "name": "MF-4", "stat": 92, "image": "" },
-    { "id": 205, "name": "MF-5", "stat": 88, "image": "" },
-    { "id": 206, "name": "MF-6", "stat": 85, "image": "" },
-    { "id": 207, "name": "MF-7", "stat": 89, "image": "" },
-    { "id": 208, "name": "MF-8", "stat": 86, "image": "" },
-    { "id": 209, "name": "MF-9", "stat": 91, "image": "" }
+    {
+      "id": 201,
+      "name": "MF-1",
+      "stat": 90,
+      "image": "",
+      "team": "Golden Eagle"
+    },
+    {
+      "id": 202,
+      "name": "MF-2",
+      "stat": 87,
+      "image": "",
+      "team": "Team Tiger"
+    },
+    {
+      "id": 203,
+      "name": "MF-3",
+      "stat": 84,
+      "image": "",
+      "team": "Blue Dragon"
+    },
+    {
+      "id": 204,
+      "name": "MF-4",
+      "stat": 92,
+      "image": "",
+      "team": "Red Phoenix"
+    },
+    {
+      "id": 205,
+      "name": "MF-5",
+      "stat": 88,
+      "image": "",
+      "team": "Silver Wolf"
+    },
+    {
+      "id": 206,
+      "name": "MF-6",
+      "stat": 85,
+      "image": "",
+      "team": "Golden Eagle"
+    },
+    {
+      "id": 207,
+      "name": "MF-7",
+      "stat": 89,
+      "image": "",
+      "team": "Team Tiger"
+    },
+    {
+      "id": 208,
+      "name": "MF-8",
+      "stat": 86,
+      "image": "",
+      "team": "Blue Dragon"
+    },
+    {
+      "id": 209,
+      "name": "MF-9",
+      "stat": 91,
+      "image": "",
+      "team": "Red Phoenix"
+    }
   ],
   "DF": [
-    { "id": 301, "name": "DF-1", "stat": 88, "image": "" },
-    { "id": 302, "name": "DF-2", "stat": 85, "image": "" },
-    { "id": 303, "name": "DF-3", "stat": 82, "image": "" },
-    { "id": 304, "name": "DF-4", "stat": 90, "image": "" },
-    { "id": 305, "name": "DF-5", "stat": 87, "image": "" },
-    { "id": 306, "name": "DF-6", "stat": 84, "image": "" },
-    { "id": 307, "name": "DF-7", "stat": 89, "image": "" },
-    { "id": 308, "name": "DF-8", "stat": 86, "image": "" },
-    { "id": 309, "name": "DF-9", "stat": 91, "image": "" }
+    {
+      "id": 301,
+      "name": "DF-1",
+      "stat": 88,
+      "image": "",
+      "team": "Silver Wolf"
+    },
+    {
+      "id": 302,
+      "name": "DF-2",
+      "stat": 85,
+      "image": "",
+      "team": "Golden Eagle"
+    },
+    {
+      "id": 303,
+      "name": "DF-3",
+      "stat": 82,
+      "image": "",
+      "team": "Team Tiger"
+    },
+    {
+      "id": 304,
+      "name": "DF-4",
+      "stat": 90,
+      "image": "",
+      "team": "Blue Dragon"
+    },
+    {
+      "id": 305,
+      "name": "DF-5",
+      "stat": 87,
+      "image": "",
+      "team": "Red Phoenix"
+    },
+    {
+      "id": 306,
+      "name": "DF-6",
+      "stat": 84,
+      "image": "",
+      "team": "Silver Wolf"
+    },
+    {
+      "id": 307,
+      "name": "DF-7",
+      "stat": 89,
+      "image": "",
+      "team": "Golden Eagle"
+    },
+    {
+      "id": 308,
+      "name": "DF-8",
+      "stat": 86,
+      "image": "",
+      "team": "Team Tiger"
+    },
+    {
+      "id": 309,
+      "name": "DF-9",
+      "stat": 91,
+      "image": "",
+      "team": "Blue Dragon"
+    }
   ],
   "GK": [
-    { "id": 401, "name": "GK-1", "stat": 90, "image": "" },
-    { "id": 402, "name": "GK-2", "stat": 86, "image": "" },
-    { "id": 403, "name": "GK-3", "stat": 83, "image": "" },
-    { "id": 404, "name": "GK-4", "stat": 92, "image": "" },
-    { "id": 405, "name": "GK-5", "stat": 88, "image": "" },
-    { "id": 406, "name": "GK-6", "stat": 85, "image": "" },
-    { "id": 407, "name": "GK-7", "stat": 89, "image": "" },
-    { "id": 408, "name": "GK-8", "stat": 87, "image": "" },
-    { "id": 409, "name": "GK-9", "stat": 91, "image": "" }
+    {
+      "id": 401,
+      "name": "GK-1",
+      "stat": 90,
+      "image": "",
+      "team": "Red Phoenix"
+    },
+    {
+      "id": 402,
+      "name": "GK-2",
+      "stat": 86,
+      "image": "",
+      "team": "Silver Wolf"
+    },
+    {
+      "id": 403,
+      "name": "GK-3",
+      "stat": 83,
+      "image": "",
+      "team": "Golden Eagle"
+    },
+    {
+      "id": 404,
+      "name": "GK-4",
+      "stat": 92,
+      "image": "",
+      "team": "Team Tiger"
+    },
+    {
+      "id": 405,
+      "name": "GK-5",
+      "stat": 88,
+      "image": "",
+      "team": "Blue Dragon"
+    },
+    {
+      "id": 406,
+      "name": "GK-6",
+      "stat": 85,
+      "image": "",
+      "team": "Red Phoenix"
+    },
+    {
+      "id": 407,
+      "name": "GK-7",
+      "stat": 89,
+      "image": "",
+      "team": "Silver Wolf"
+    },
+    {
+      "id": 408,
+      "name": "GK-8",
+      "stat": 87,
+      "image": "",
+      "team": "Golden Eagle"
+    },
+    { "id": 409, "name": "GK-9", "stat": 91, "image": "", "team": "Team Tiger" }
   ]
 }

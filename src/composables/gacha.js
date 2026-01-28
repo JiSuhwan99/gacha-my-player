@@ -1,4 +1,4 @@
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue"; // computed 추가
 import { auth, database } from "../firebase.js";
 import { ref as dbRef, set, get } from "firebase/database";
 import {
@@ -6,29 +6,35 @@ import {
   signInWithEmailAndPassword,
   onAuthStateChanged,
   updateProfile,
+  signOut,
 } from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+
 export function useGacha() {
+  // 1. 상태 변수 선언 (순서가 중요합니다)
   const playerDb = ref({});
   const isModalOpen = ref(false);
   const isSaveModalOpen = ref(false);
+  const isLoggedIn = ref(false);
+  const isSaved = ref(false); // ✅ 위로 올림
+  const authMode = ref("login");
+
   const gachaOptions = ref([]);
   const squad = ref({});
   const currentPos = ref("");
   const currentSlotKey = ref("");
+  const currentGachaResults = ref({});
+
   const saveData = ref({
     id: "",
-    nickname: "", // 닉네임 추가
+    nickname: "",
     pw: "",
-    pwConfirm: "", // 비밀번호 확인 추가
+    pwConfirm: "",
   });
 
-  // 추가된 상태
-  const isLoggedIn = ref(false);
-  const authMode = ref("login");
   const showToast = ref(false);
   const toastMessage = ref("");
 
+  // 2. 초기화 및 로그인 감시
   onMounted(async () => {
     try {
       const response = await fetch("/playersDb.json");
@@ -40,13 +46,12 @@ export function useGacha() {
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         isLoggedIn.value = true;
-        console.log("로그인 확인:", user.displayName);
+        isSaveModalOpen.value = false; // 로그인 감지되면 모달 닫기
         await loadUserSquad(user.uid);
       } else {
-        // 🔴 로그아웃 되었을 때 처리
         isLoggedIn.value = false;
-        isSaved.value = false; // ✅ 여기서 false로 바꿔줘야 로그아웃 시 버튼이 다시 나타납니다!
-        squad.value = {}; // (선택사항) 로그아웃 시 화면의 선수들도 비우고 싶다면 추가
+        isSaved.value = false;
+        squad.value = {};
       }
     });
   });
@@ -59,132 +64,118 @@ export function useGacha() {
     }, 1500);
   };
 
-  // 로그인 모달 열기
+  // 3. 모달 제어 함수
   const openLoginModal = () => {
     authMode.value = "login";
-    ((saveData.value = {
-      id: "",
-      nickname: "", // 추가
-      pw: "",
-      pwConfirm: "",
-    }),
-      (isSaveModalOpen.value = true));
-  };
-
-  // 저장 모달 열기
-  const openSaveModal = () => {
-    const filledSlots = Object.keys(squad.value).length;
-    if (filledSlots < 11) {
-      triggerToast("모든 선수를 뽑은 후에 저장해 주세요!");
-      return;
-    }
-    authMode.value = "save";
+    saveData.value = { id: "", nickname: "", pw: "", pwConfirm: "" };
     isSaveModalOpen.value = true;
   };
 
   const openRegisterModal = () => {
     authMode.value = "register";
-    saveData.value = { id: "", nickname: "", pw: "", pwConfirm: "" }; // 초기화
+    saveData.value = { id: "", nickname: "", pw: "", pwConfirm: "" };
     isSaveModalOpen.value = true;
   };
-  const currentGachaResults = ref({});
+
+  // 4. 가차 및 선수 선택 로직
+  const teamColors = {
+    "Team Tiger": "#ff9800", // 주황색
+    "Blue Dragon": "#2196f3", // 파란색
+    "Red Phoenix": "#f44336", // 빨간색
+    "Silver Wolf": "#9e9e9e", // 은색/회색
+    "Golden Eagle": "#ffeb3b", // 노란색/금색
+  };
+
+  // 2. selectPlayer 함수 수정
+  const selectPlayer = (player) => {
+    // 팀 색상 매핑 (팀 이름이 key와 정확히 일치해야 함)
+    const teamColors = {
+      "Team Tiger": "#ff9800",
+      "Blue Dragon": "#2196f3",
+      "Red Phoenix": "#f44336",
+      "Silver Wolf": "#9e9e9e",
+      "Golden Eagle": "#ffeb3b",
+    };
+
+    // 기존 선수 데이터에 teamColor를 안전하게 병합
+    const playerWithColor = {
+      ...player,
+      teamColor: teamColors[player.team] || "#ffffff", // 매칭되는 팀이 없으면 흰색
+    };
+
+    squad.value[currentSlotKey.value] = playerWithColor;
+    delete currentGachaResults.value[currentSlotKey.value];
+    isModalOpen.value = false;
+  };
+
+  // 3. (옵션) 가차 리스트 생성 시에도 색상을 미리 넣어두고 싶다면 openGacha 수정
   const openGacha = (pos, n) => {
     const slotKey = pos + n;
-
-    // 이미 선수가 확정된 슬롯이면 무시
     if (squad.value[slotKey] || !playerDb.value[pos]) return;
 
     currentPos.value = pos;
     currentSlotKey.value = slotKey;
 
-    // 2. 이미 이 슬롯에 생성된 결과가 있는지 확인
     if (currentGachaResults.value[slotKey]) {
-      // 이미 있다면 새로운 랜덤을 돌리지 않고 저장된 값을 사용
       gachaOptions.value = currentGachaResults.value[slotKey];
     } else {
-      // 없다면 새로 생성 (중복 제거 로직 포함)
-
-      // 현재 필드에 배치된 모든 선수의 ID 목록 추출
       const takenIds = Object.values(squad.value).map((p) => p.id);
-
-      // 전체 DB에서 이미 배치된 선수를 제외하고 섞기
       const filteredPool = playerDb.value[pos].filter(
         (p) => !takenIds.includes(p.id),
       );
 
-      // 후보가 3명보다 적을 경우를 대비해 예외 처리 후 3명 추출
+      // 뽑기 옵션 생성 시 미리 색상을 매칭함
       const newOptions = [...filteredPool]
         .sort(() => 0.5 - Math.random())
-        .slice(0, 3);
+        .slice(0, 3)
+        .map((p) => ({
+          ...p,
+          teamColor: teamColors[p.team] || "#ffffff",
+        }));
 
-      // 결과를 상태에 저장 (다음에 열 때 고정하기 위함)
       currentGachaResults.value[slotKey] = newOptions;
       gachaOptions.value = newOptions;
     }
-
     isModalOpen.value = true;
   };
 
-  const selectPlayer = (player) => {
-    squad.value[currentSlotKey.value] = player;
-
-    // 선수를 확정했으므로 해당 슬롯의 임시 가차 결과는 삭제
-    delete currentGachaResults.value[currentSlotKey.value];
-
-    isModalOpen.value = false;
-  };
-
-  const handleImageError = (e) => {
-    e.target.src = "/src/assets/images/unknown_player.png";
-  };
-
+  // 5. 회원가입/로그인/저장 핵심 로직
   const handleRegister = async () => {
     try {
-      // 1. 아이디 유효성 검사 (영문+숫자 포함, 4자 이상)
       const idRegex = /^(?=.*[a-zA-Z])(?=.*[0-9]).{4,}$/;
       if (!idRegex.test(saveData.value.id)) {
         triggerToast("아이디는 영문과 숫자를 포함하여 4자 이상이어야 합니다.");
         return;
       }
-
-      // 2. 닉네임 유효성 검사 (기존 요청: 10자 이내)
       if (!saveData.value.nickname || saveData.value.nickname.length > 10) {
         triggerToast("닉네임은 10자 이내로 입력해주세요.");
         return;
       }
-
-      // 3. 비밀번호 확인 검사
       if (saveData.value.pw !== saveData.value.pwConfirm) {
         triggerToast("비밀번호가 일치하지 않습니다!");
         return;
       }
 
-      if (saveData.value.pw.length < 6) {
-        triggerToast("비밀번호는 6자리 이상이어야 합니다.");
-        return;
-      }
-
-      // 4. Firebase 계정 생성 (아이디 뒤에 @test.com을 붙여서 이메일처럼 처리)
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         `${saveData.value.id}@test.com`,
         saveData.value.pw,
       );
 
-      // 5. 닉네임 설정
       await updateProfile(userCredential.user, {
         displayName: saveData.value.nickname,
       });
 
-      triggerToast(`${saveData.value.nickname}님, 가입을 환영합니다!`);
-      authMode.value = "login";
+      triggerToast("회원가입 성공!");
+      // onAuthStateChanged가 모달을 닫고 데이터를 처리하므로
+      // 여기서는 성공 메시지만 띄우고 지연 후 저장을 시도합니다.
+      setTimeout(() => {
+        submitSave();
+      }, 600);
     } catch (e) {
-      console.error(e);
-      if (e.code === "auth/email-already-in-use") {
+      if (e.code === "auth/email-already-in-use")
         triggerToast("이미 존재하는 아이디입니다.");
-      } else {
-        triggerToast("가입 실패: " + e.message);
-      }
+      else triggerToast("가입 실패: " + e.message);
     }
   };
 
@@ -195,10 +186,8 @@ export function useGacha() {
         `${saveData.value.id}@test.com`,
         saveData.value.pw,
       );
-      isLoggedIn.value = true;
-      isSaveModalOpen.value = false;
       triggerToast("반가워요!");
-      loadUserSquad(); // 로그인 시 데이터 불러오기
+      // 로그인 시 onAuthStateChanged가 loadUserSquad를 실행합니다.
     } catch (e) {
       triggerToast("로그인 정보를 확인하세요.");
     }
@@ -208,19 +197,22 @@ export function useGacha() {
     try {
       await signOut(auth);
       isLoggedIn.value = false;
-      isSaved.value = false; // ✅ 로그아웃 버튼 클릭 시 즉시 초기화
+      isSaved.value = false;
       squad.value = {};
       triggerToast("로그아웃 되었습니다.");
     } catch (error) {
-      console.error("로그아웃 에러:", error);
+      console.error(error);
     }
   };
 
   const submitSave = async () => {
-    console.log("저장 프로세스 시작!"); // 확인용
+    const currentPickedCount = Object.keys(squad.value).length;
+    if (currentPickedCount < 11) {
+      triggerToast(`모든 선수 카드를 뽑은 후 저장이 가능합니다.`);
+      return;
+    }
 
     if (!isLoggedIn.value || !auth.currentUser) {
-      console.log("로그인 안 됨 -> 모달 오픈");
       authMode.value = "login";
       isSaveModalOpen.value = true;
       return;
@@ -229,40 +221,88 @@ export function useGacha() {
     try {
       const user = auth.currentUser;
       const userRef = dbRef(database, `users/${user.uid}`);
-
       await set(userRef, {
         nickname: user.displayName || "익명",
         squad: squad.value,
         updatedAt: Date.now(),
       });
-
-      isSaved.value = true; // ✅ 저장 성공하면 버튼 숨기기 위해 true!
+      isSaved.value = true;
       triggerToast("성공적으로 저장되었습니다!");
     } catch (e) {
       console.error(e);
     }
   };
 
-  const isSaved = ref(false); // 저장 여부 상태 추가
-
-  // 1. 데이터를 불러올 때 확인
   const loadUserSquad = async (uid) => {
+    if (!uid) return;
     try {
       const userRef = dbRef(database, `users/${uid}`);
       const snapshot = await get(userRef);
-
       if (snapshot.exists()) {
         const data = snapshot.val();
-        if (data.squad && Object.keys(data.squad).length > 0) {
+        if (data.squad) {
           squad.value = data.squad;
-          isSaved.value = true; // ✅ 저장된 데이터가 있으면 true!
-          console.log("저장된 스쿼드 로드 완료");
+          isSaved.value = true;
         }
       }
     } catch (error) {
-      console.error("불러오기 에러:", error);
+      console.error("로드 실패:", error);
     }
   };
+  const handleImageError = (e) => {
+    // 🚑 이미지를 찾을 수 없을 때 'unknown_player.png'로 교체
+    e.target.src = "/images/unknown_player.png";
+  };
+
+  // 1. 평균 OVR 계산 (p.ovr -> p.stat 으로 수정)
+  const averageOvr = computed(() => {
+    const players = Object.values(squad.value);
+    if (players.length === 0) return 0;
+
+    // 데이터 키값이 'stat'이므로 p.stat을 더합니다.
+    const total = players.reduce((sum, p) => sum + (Number(p.stat) || 0), 0);
+    return Math.round(total / players.length);
+  });
+
+  // 2. 팀 컬러 계산 (소속팀 키값이 'team'인지 'club'인지 확인 필요!)
+  const teamColorInfo = computed(() => {
+    const players = Object.values(squad.value);
+    if (players.length === 0)
+      return { name: "없음", level: 0, buff: 0, count: 0 };
+
+    const counts = {};
+    players.forEach((p) => {
+      // 💡 만약 팀 이름 키값이 'team'이 아니라면 이 부분을 p.club 등으로 고치세요.
+      const teamName = p.team || p.club;
+      if (teamName) {
+        counts[teamName] = (counts[teamName] || 0) + 1;
+      }
+    });
+
+    let mainTeam = "없음";
+    let maxCount = 0;
+    for (const team in counts) {
+      if (counts[team] > maxCount) {
+        maxCount = counts[team];
+        mainTeam = team;
+      }
+    }
+
+    let level = 0,
+      buff = 0;
+    if (maxCount >= 8) {
+      level = 3;
+      buff = 5;
+    } else if (maxCount >= 5) {
+      level = 2;
+      buff = 3;
+    } else if (maxCount >= 3) {
+      level = 1;
+      buff = 1;
+    }
+
+    return { name: mainTeam, level, buff, count: maxCount };
+  });
 
   return {
     isSaved,
@@ -279,14 +319,16 @@ export function useGacha() {
     authMode,
     openGacha,
     selectPlayer,
-    handleImageError,
     triggerToast,
     openLoginModal,
-    openSaveModal,
     openRegisterModal,
     handleRegister,
     handleLogin,
     handleLogout,
     submitSave,
+    handleImageError,
+    averageOvr,
+    teamColorInfo,
+    squad,
   };
 }
