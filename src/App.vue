@@ -26,6 +26,7 @@ const {
   handleImageError,
   averageOvr,
   teamColorInfo,
+  formation,
 } = useGacha();
 </script>
 
@@ -48,7 +49,6 @@ const {
           <button v-if="!isLoggedIn" class="login-btn" @click="openLoginModal">
             Login
           </button>
-
           <div v-else class="user-logged-in">
             <span class="user-info">
               나의 닉네임 : {{ auth.currentUser?.displayName || "감독" }}
@@ -65,7 +65,7 @@ const {
         <div class="field">
           <div class="row forwards">
             <div
-              v-for="n in 3"
+              v-for="n in formation.fw"
               :key="'FW' + n"
               class="player-slot"
               @click="openGacha('FW', n)"
@@ -73,15 +73,13 @@ const {
               <div v-if="squad['FW' + n]" class="player-card">
                 <div
                   class="team-dot"
-                  :style="{ backgroundColor: player.teamColor }"
+                  :style="{
+                    backgroundColor: squad['FW' + n]?.teamColor || '#ffffff',
+                  }"
                 ></div>
                 <img
-                  :src="
-                    squad['FW' + n].image || '/assets/images/unknown_player.png'
-                  "
-                  alt="player"
+                  :src="squad['FW' + n].image || '/images/unknown_player.png'"
                   class="p-img"
-                  @error="handleImageError"
                 />
                 <div class="p-info">
                   <span class="p-name">{{ squad["FW" + n].name }}</span>
@@ -92,59 +90,205 @@ const {
             </div>
           </div>
 
-          <div class="row midfielders">
+          <div class="row wf">
             <div
-              v-for="n in 3"
-              :key="'MF' + n"
+              v-for="n in formation.wf"
+              :key="'wf' + n"
+              class="player-slot"
+              @click="openGacha('FW', n)"
+            >
+              <div v-if="squad['FW' + n]" class="player-card">
+                <div
+                  class="team-dot"
+                  :style="{
+                    backgroundColor: squad['FW' + n]?.teamColor || '#ffffff',
+                  }"
+                ></div>
+                <img
+                  :src="squad['FW' + n].image || '/images/unknown_player.png'"
+                  class="p-img"
+                />
+                <div class="p-info">
+                  <span class="p-name">{{ squad["FW" + n].name }}</span>
+                  <span class="p-stat">{{ squad["FW" + n].stat }}</span>
+                </div>
+              </div>
+              <span v-else class="pos-label">FW</span>
+            </div>
+          </div>
+
+          <div class="row wm">
+            <div
+              v-for="n in formation.wm"
+              :key="'WM' + n"
+              class="player-slot"
+              @click="openGacha('FW', n)"
+            >
+              <div v-if="squad['FW' + n]" class="player-card">
+                <div
+                  class="team-dot"
+                  :style="{
+                    backgroundColor: squad['FW' + n]?.teamColor || '#ffffff',
+                  }"
+                ></div>
+                <img
+                  :src="squad['FW' + n].image || '/images/unknown_player.png'"
+                  class="p-img"
+                />
+                <div class="p-info">
+                  <span class="p-name">{{ squad["FW" + n].name }}</span>
+                  <span class="p-stat">{{ squad["FW" + n].stat }}</span>
+                </div>
+              </div>
+              <span v-else class="pos-label">WM</span>
+            </div>
+          </div>
+
+          <div class="row AM">
+            <div
+              v-for="n in formation.am"
+              :key="'AM' + n"
               class="player-slot"
               @click="openGacha('MF', n)"
             >
               <div v-if="squad['MF' + n]" class="player-card">
                 <div
                   class="team-dot"
-                  :style="{ backgroundColor: player.teamColor }"
+                  :style="{
+                    backgroundColor: squad['MF' + n]?.teamColor || '#ffffff',
+                  }"
                 ></div>
-                <div></div>
                 <img
-                  :src="
-                    squad['MF' + n].image || '/assets/images/unknown_player.png'
-                  "
-                  alt="player"
+                  :src="squad['MF' + n].image || '/images/unknown_player.png'"
                   class="p-img"
-                  @error="handleImageError"
                 />
                 <div class="p-info">
                   <span class="p-name">{{ squad["MF" + n].name }}</span>
                   <span class="p-stat">{{ squad["MF" + n].stat }}</span>
                 </div>
               </div>
-              <span v-else class="pos-label">MF</span>
+              <span v-else class="pos-label">AM</span>
             </div>
           </div>
 
-          <div class="row defenders">
+          <div class="row cm">
             <div
-              v-for="n in 4"
-              :key="'DF' + n"
+              v-for="n in formation.cm"
+              :key="'cm' + n"
+              class="player-slot"
+              @click="openGacha('MF', n)"
+            >
+              <div v-if="squad['MF' + n]" class="player-card">
+                <div
+                  class="team-dot"
+                  :style="{
+                    backgroundColor: squad['MF' + n]?.teamColor || '#ffffff',
+                  }"
+                ></div>
+                <img
+                  :src="squad['MF' + n].image || '/images/unknown_player.png'"
+                  class="p-img"
+                />
+                <div class="p-info">
+                  <span class="p-name">{{ squad["MF" + n].name }}</span>
+                  <span class="p-stat">{{ squad["MF" + n].stat }}</span>
+                </div>
+              </div>
+              <span v-else class="pos-label">CM</span>
+            </div>
+          </div>
+
+          <div class="row dmf">
+            <div
+              v-for="n in formation.dmf"
+              :key="'DMF' + n"
+              class="player-slot"
+              @click="openGacha('MF', n + formation.dmf)"
+            >
+              <div v-if="squad['MF' + (n + formation.dmf)]" class="player-card">
+                <div
+                  class="team-dot"
+                  :style="{
+                    backgroundColor:
+                      squad['MF' + (n + formation.dmf)]?.teamColor || '#ffffff',
+                  }"
+                ></div>
+                <img
+                  :src="
+                    squad['MF' + (n + formation.dmf)].image ||
+                    '/images/unknown_player.png'
+                  "
+                  class="p-img"
+                />
+                <div class="p-info">
+                  <span class="p-name">{{
+                    squad["MF" + (n + formation.dmf)].name
+                  }}</span>
+                  <span class="p-stat">{{
+                    squad["MF" + (n + formation.dmf)].stat
+                  }}</span>
+                </div>
+              </div>
+              <span v-else class="pos-label">DMF</span>
+            </div>
+          </div>
+
+          <div class="row wingbacks" v-if="formation.wb > 0">
+            <div
+              v-for="n in formation.wb"
+              :key="'WB' + n"
               class="player-slot"
               @click="openGacha('DF', n)"
             >
               <div v-if="squad['DF' + n]" class="player-card">
                 <div
                   class="team-dot"
-                  :style="{ backgroundColor: player.teamColor }"
+                  :style="{
+                    backgroundColor: squad['DF' + n]?.teamColor || '#ffffff',
+                  }"
                 ></div>
                 <img
-                  :src="
-                    squad['DF' + n].image || '/assets/images/unknown_player.png'
-                  "
-                  alt="player"
+                  :src="squad['DF' + n].image || '/images/unknown_player.png'"
                   class="p-img"
-                  @error="handleImageError"
                 />
                 <div class="p-info">
                   <span class="p-name">{{ squad["DF" + n].name }}</span>
                   <span class="p-stat">{{ squad["DF" + n].stat }}</span>
+                </div>
+              </div>
+              <span v-else class="pos-label">WB</span>
+            </div>
+          </div>
+
+          <div class="row df">
+            <div
+              v-for="n in formation.df"
+              :key="'DF' + n"
+              class="player-slot"
+              @click="openGacha('DF', n + formation.df)"
+            >
+              <div v-if="squad['DF' + (n + formation.df)]" class="player-card">
+                <div
+                  class="team-dot"
+                  :style="{
+                    backgroundColor:
+                      squad['DF' + (n + formation.df)]?.teamColor || '#ffffff',
+                  }"
+                ></div>
+                <img
+                  :src="
+                    squad['DF' + (n + formation.df)].image ||
+                    '/images/unknown_player.png'
+                  "
+                  class="p-img"
+                />
+                <div class="p-info">
+                  <span class="p-name">{{
+                    squad["DF" + (n + formation.df)].name
+                  }}</span>
+                  <span class="p-stat">{{
+                    squad["DF" + (n + formation.df)].stat
+                  }}</span>
                 </div>
               </div>
               <span v-else class="pos-label">DF</span>
@@ -156,15 +300,13 @@ const {
               <div v-if="squad['GK1']" class="player-card">
                 <div
                   class="team-dot"
-                  :style="{ backgroundColor: player.teamColor }"
+                  :style="{
+                    backgroundColor: squad['GK1']?.teamColor || '#ffffff',
+                  }"
                 ></div>
                 <img
-                  :src="
-                    squad['GK1'].image || '/assets/images/unknown_player.png'
-                  "
-                  alt="player"
+                  :src="squad['GK1'].image || '/images/unknown_player.png'"
                   class="p-img"
-                  @error="handleImageError"
                 />
                 <div class="p-info">
                   <span class="p-name">{{ squad["GK1"].name }}</span>
@@ -183,7 +325,6 @@ const {
             <div class="card-label">평균 OVR</div>
             <div class="card-value">{{ averageOvr }}</div>
           </div>
-
           <div class="info-card">
             <div class="card-label">적용 팀컬러</div>
             <div class="card-value team-color">
@@ -199,8 +340,7 @@ const {
 
       <div class="save-btn-wrapper" v-if="!isSaved">
         <div class="tooltip-base">
-          팀을 저장해야 선수들이<br />
-          사라지지 않아요!
+          팀을 저장해야 선수들이<br />사라지지 않아요!
         </div>
         <button class="floating-save-btn" @click="submitSave">
           <span class="icon">💾</span> 팀 저장하기
@@ -216,7 +356,6 @@ const {
       >
         <div class="modal-content">
           <h2 class="gacha-title">선수 카드를 1장 뽑아주세요.</h2>
-
           <div class="card-container">
             <div
               v-for="player in gachaOptions"
@@ -226,14 +365,13 @@ const {
             >
               <div
                 class="team-dot"
-                :style="{ backgroundColor: player.teamColor }"
+                :style="{ backgroundColor: player?.teamColor || '#ffffff' }"
               ></div>
               <img
-                :src="player.image || './assets/unknown_player.png'"
+                :src="player.image || '/images/unknown_player.png'"
                 class="p-img"
                 @error="handleImageError"
               />
-
               <div class="p-info">
                 <span class="p-stat">{{ player.stat }}</span>
                 <span class="p-name">{{ player.name }}</span>
@@ -248,10 +386,7 @@ const {
     <Transition name="fade">
       <div v-if="isSaveModalOpen" class="modal-overlay">
         <div class="modal-content save-form-modal">
-          <h2 class="modal-title">
-            <span>GACHA MY PLAYER</span>
-          </h2>
-
+          <h2 class="modal-title"><span>GACHA MY PLAYER</span></h2>
           <div class="input-group">
             <input
               v-if="authMode === 'register'"
@@ -265,13 +400,11 @@ const {
               type="text"
               placeholder="아이디 (영문+숫자 4자 이상)"
             />
-
             <input
               v-model="saveData.pw"
               type="password"
               placeholder="비밀번호 (6자 이상)"
             />
-
             <input
               v-if="authMode === 'register'"
               v-model="saveData.pwConfirm"
@@ -279,7 +412,6 @@ const {
               placeholder="비밀번호 확인"
             />
           </div>
-
           <div class="modal-btns">
             <button
               class="confirm-btn"
@@ -303,7 +435,6 @@ const {
               닫기
             </button>
           </div>
-
           <div class="auth-switch">
             <p v-if="authMode === 'login'">
               계정이 없으신가요?

@@ -4,64 +4,109 @@
       "id": 101,
       "name": "FW-1",
       "stat": 92,
-      "image": "",
+      "mainPosition": "ST",
+      "subPosition1": "CF",
+      "subPosition2": "WF",
       "team": "Team Tiger"
     },
     {
       "id": 102,
       "name": "FW-2",
       "stat": 88,
-      "image": "",
+      "mainPosition": "WF",
+      "subPosition1": "ST",
+      "subPosition2": "",
       "team": "Blue Dragon"
     },
     {
       "id": 103,
       "name": "FW-3",
       "stat": 85,
-      "image": "",
+      "mainPosition": "WF",
+      "subPosition1": "",
+      "subPosition2": "CF",
       "team": "Red Phoenix"
     },
     {
       "id": 104,
       "name": "FW-4",
       "stat": 90,
-      "image": "",
+      "mainPosition": "CF",
+      "subPosition1": "ST",
+      "subPosition2": "AM",
       "team": "Silver Wolf"
     },
     {
       "id": 105,
       "name": "FW-5",
       "stat": 87,
-      "image": "",
+      "mainPosition": "ST",
+      "subPosition1": "CF",
+      "subPosition2": "WF",
       "team": "Golden Eagle"
     },
     {
       "id": 106,
       "name": "FW-6",
-      "stat": 84,
-      "image": "",
+      "stat": 89,
+      "mainPosition": "ST",
+      "subPosition1": "WF",
+      "subPosition2": "",
       "team": "Team Tiger"
     },
     {
       "id": 107,
       "name": "FW-7",
-      "stat": 91,
-      "image": "",
+      "stat": 86,
+      "mainPosition": "WF",
+      "subPosition1": "WM",
+      "subPosition2": "CF",
       "team": "Blue Dragon"
     },
     {
       "id": 108,
       "name": "FW-8",
-      "stat": 86,
-      "image": "",
+      "stat": 91,
+      "mainPosition": "WF",
+      "subPosition1": "ST",
+      "subPosition2": "",
       "team": "Red Phoenix"
     },
     {
       "id": 109,
       "name": "FW-9",
-      "stat": 89,
-      "image": "",
+      "stat": 84,
+      "mainPosition": "WF",
+      "subPosition1": "WM",
+      "subPosition2": "",
       "team": "Silver Wolf"
+    },
+    {
+      "id": 110,
+      "name": "FW-10",
+      "stat": 88,
+      "mainPosition": "WF",
+      "subPosition1": "CF",
+      "subPosition2": "ST",
+      "team": "Golden Eagle"
+    },
+    {
+      "id": 111,
+      "name": "FW-11",
+      "stat": 93,
+      "mainPosition": "CF",
+      "subPosition1": "AM",
+      "subPosition2": "ST",
+      "team": "Team Tiger"
+    },
+    {
+      "id": 112,
+      "name": "FW-12",
+      "stat": 85,
+      "mainPosition": "CF",
+      "subPosition1": "WF",
+      "subPosition2": "",
+      "team": "Blue Dragon"
     }
   ],
   "MF": [
@@ -69,64 +114,136 @@
       "id": 201,
       "name": "MF-1",
       "stat": 90,
-      "image": "",
+      "mainPosition": "AM",
+      "subPosition1": "CM",
+      "subPosition2": "WM",
       "team": "Golden Eagle"
     },
     {
       "id": 202,
       "name": "MF-2",
       "stat": 87,
-      "image": "",
+      "mainPosition": "CM",
+      "subPosition1": "DM",
+      "subPosition2": "AM",
       "team": "Team Tiger"
     },
     {
       "id": 203,
       "name": "MF-3",
       "stat": 84,
-      "image": "",
+      "mainPosition": "DM",
+      "subPosition1": "CM",
+      "subPosition2": "CB",
       "team": "Blue Dragon"
     },
     {
       "id": 204,
       "name": "MF-4",
       "stat": 92,
-      "image": "",
+      "mainPosition": "WM",
+      "subPosition1": "WF",
+      "subPosition2": "",
       "team": "Red Phoenix"
     },
     {
       "id": 205,
       "name": "MF-5",
       "stat": 88,
-      "image": "",
+      "mainPosition": "WM",
+      "subPosition1": "WF",
+      "subPosition2": "",
       "team": "Silver Wolf"
     },
     {
       "id": 206,
       "name": "MF-6",
-      "stat": 85,
-      "image": "",
-      "team": "Golden Eagle"
+      "stat": 89,
+      "mainPosition": "AM",
+      "subPosition1": "CF",
+      "subPosition2": "CM",
+      "team": "Team Tiger"
     },
     {
       "id": 207,
       "name": "MF-7",
-      "stat": 89,
-      "image": "",
-      "team": "Team Tiger"
+      "stat": 86,
+      "mainPosition": "AM",
+      "subPosition1": "WM",
+      "subPosition2": "",
+      "team": "Blue Dragon"
     },
     {
       "id": 208,
       "name": "MF-8",
-      "stat": 86,
-      "image": "",
-      "team": "Blue Dragon"
+      "stat": 91,
+      "mainPosition": "CM",
+      "subPosition1": "AM",
+      "subPosition2": "DM",
+      "team": "Red Phoenix"
     },
     {
       "id": 209,
       "name": "MF-9",
-      "stat": 91,
-      "image": "",
+      "stat": 85,
+      "mainPosition": "CM",
+      "subPosition1": "WM",
+      "subPosition2": "",
+      "team": "Silver Wolf"
+    },
+    {
+      "id": 210,
+      "name": "MF-10",
+      "stat": 87,
+      "mainPosition": "DM",
+      "subPosition1": "CB",
+      "subPosition2": "CM",
+      "team": "Golden Eagle"
+    },
+    {
+      "id": 211,
+      "name": "MF-11",
+      "stat": 83,
+      "mainPosition": "DM",
+      "subPosition1": "CM",
+      "subPosition2": "WM",
+      "team": "Team Tiger"
+    },
+    {
+      "id": 212,
+      "name": "MF-12",
+      "stat": 89,
+      "mainPosition": "WM",
+      "subPosition1": "LB",
+      "subPosition2": "WF",
+      "team": "Blue Dragon"
+    },
+    {
+      "id": 213,
+      "name": "MF-13",
+      "stat": 86,
+      "mainPosition": "WM",
+      "subPosition1": "",
+      "subPosition2": "AM",
       "team": "Red Phoenix"
+    },
+    {
+      "id": 214,
+      "name": "MF-14",
+      "stat": 90,
+      "mainPosition": "WM",
+      "subPosition1": "RB",
+      "subPosition2": "WF",
+      "team": "Silver Wolf"
+    },
+    {
+      "id": 215,
+      "name": "MF-15",
+      "stat": 84,
+      "mainPosition": "WM",
+      "subPosition1": "",
+      "subPosition2": "CM",
+      "team": "Golden Eagle"
     }
   ],
   "DF": [
@@ -134,64 +251,136 @@
       "id": 301,
       "name": "DF-1",
       "stat": 88,
-      "image": "",
+      "mainPosition": "CB",
+      "subPosition1": "DM",
+      "subPosition2": "RB",
       "team": "Silver Wolf"
     },
     {
       "id": 302,
       "name": "DF-2",
       "stat": 85,
-      "image": "",
+      "mainPosition": "LB",
+      "subPosition1": "WFB",
+      "subPosition2": "WM",
       "team": "Golden Eagle"
     },
     {
       "id": 303,
       "name": "DF-3",
       "stat": 82,
-      "image": "",
+      "mainPosition": "RB",
+      "subPosition1": "WFB",
+      "subPosition2": "WM",
       "team": "Team Tiger"
     },
     {
       "id": 304,
       "name": "DF-4",
       "stat": 90,
-      "image": "",
+      "mainPosition": "WFB",
+      "subPosition1": "LB",
+      "subPosition2": "WM",
       "team": "Blue Dragon"
     },
     {
       "id": 305,
       "name": "DF-5",
       "stat": 87,
-      "image": "",
+      "mainPosition": "WFB",
+      "subPosition1": "RB",
+      "subPosition2": "WM",
       "team": "Red Phoenix"
     },
     {
       "id": 306,
       "name": "DF-6",
-      "stat": 84,
-      "image": "",
-      "team": "Silver Wolf"
+      "stat": 86,
+      "mainPosition": "CB",
+      "subPosition1": "LB",
+      "subPosition2": "RB",
+      "team": "Team Tiger"
     },
     {
       "id": 307,
       "name": "DF-7",
-      "stat": 89,
-      "image": "",
-      "team": "Golden Eagle"
+      "stat": 84,
+      "mainPosition": "CB",
+      "subPosition1": "DM",
+      "subPosition2": "",
+      "team": "Blue Dragon"
     },
     {
       "id": 308,
       "name": "DF-8",
-      "stat": 86,
-      "image": "",
-      "team": "Team Tiger"
+      "stat": 89,
+      "mainPosition": "LB",
+      "subPosition1": "WFB",
+      "subPosition2": "CB",
+      "team": "Red Phoenix"
     },
     {
       "id": 309,
       "name": "DF-9",
-      "stat": 91,
-      "image": "",
+      "stat": 83,
+      "mainPosition": "LB",
+      "subPosition1": "WM",
+      "subPosition2": "DF",
+      "team": "Silver Wolf"
+    },
+    {
+      "id": 310,
+      "name": "DF-10",
+      "stat": 85,
+      "mainPosition": "RB",
+      "subPosition1": "WFB",
+      "subPosition2": "WM",
+      "team": "Golden Eagle"
+    },
+    {
+      "id": 311,
+      "name": "DF-11",
+      "stat": 81,
+      "mainPosition": "RB",
+      "subPosition1": "WM",
+      "subPosition2": "CB",
+      "team": "Team Tiger"
+    },
+    {
+      "id": 312,
+      "name": "DF-12",
+      "stat": 88,
+      "mainPosition": "WFB",
+      "subPosition1": "LB",
+      "subPosition2": "WM",
       "team": "Blue Dragon"
+    },
+    {
+      "id": 313,
+      "name": "DF-13",
+      "stat": 86,
+      "mainPosition": "WFB",
+      "subPosition1": "WF",
+      "subPosition2": "LB",
+      "team": "Red Phoenix"
+    },
+    {
+      "id": 314,
+      "name": "DF-14",
+      "stat": 87,
+      "mainPosition": "WFB",
+      "subPosition1": "RB",
+      "subPosition2": "WM",
+      "team": "Silver Wolf"
+    },
+    {
+      "id": 315,
+      "name": "DF-15",
+      "stat": 84,
+      "mainPosition": "WFB",
+      "subPosition1": "WF",
+      "subPosition2": "RB",
+      "team": "Golden Eagle"
     }
   ],
   "GK": [
@@ -199,58 +388,46 @@
       "id": 401,
       "name": "GK-1",
       "stat": 90,
-      "image": "",
+      "mainPosition": "GK",
+      "subPosition1": "",
+      "subPosition2": "",
       "team": "Red Phoenix"
     },
     {
       "id": 402,
       "name": "GK-2",
-      "stat": 86,
-      "image": "",
+      "stat": 90,
+      "mainPosition": "GK",
+      "subPosition1": "",
+      "subPosition2": "",
       "team": "Silver Wolf"
     },
     {
       "id": 403,
       "name": "GK-3",
-      "stat": 83,
-      "image": "",
-      "team": "Golden Eagle"
+      "stat": 90,
+      "mainPosition": "GK",
+      "subPosition1": "",
+      "subPosition2": "",
+      "team": "Blue Dragon"
     },
     {
       "id": 404,
       "name": "GK-4",
-      "stat": 92,
-      "image": "",
-      "team": "Team Tiger"
+      "stat": 90,
+      "mainPosition": "GK",
+      "subPosition1": "",
+      "subPosition2": "",
+      "team": "Golden Eagle"
     },
     {
       "id": 405,
       "name": "GK-5",
-      "stat": 88,
-      "image": "",
-      "team": "Blue Dragon"
-    },
-    {
-      "id": 406,
-      "name": "GK-6",
-      "stat": 85,
-      "image": "",
-      "team": "Red Phoenix"
-    },
-    {
-      "id": 407,
-      "name": "GK-7",
-      "stat": 89,
-      "image": "",
-      "team": "Silver Wolf"
-    },
-    {
-      "id": 408,
-      "name": "GK-8",
-      "stat": 87,
-      "image": "",
-      "team": "Golden Eagle"
-    },
-    { "id": 409, "name": "GK-9", "stat": 91, "image": "", "team": "Team Tiger" }
+      "stat": 90,
+      "mainPosition": "GK",
+      "subPosition1": "",
+      "subPosition2": "",
+      "team": "Team Tiger"
+    }
   ]
 }

@@ -85,46 +85,60 @@ export function useGacha() {
     "Silver Wolf": "#9e9e9e", // 은색/회색
     "Golden Eagle": "#ffeb3b", // 노란색/금색
   };
-
-  // 2. selectPlayer 함수 수정
   const selectPlayer = (player) => {
-    // 팀 색상 매핑 (팀 이름이 key와 정확히 일치해야 함)
-    const teamColors = {
-      "Team Tiger": "#ff9800",
-      "Blue Dragon": "#2196f3",
-      "Red Phoenix": "#f44336",
-      "Silver Wolf": "#9e9e9e",
-      "Golden Eagle": "#ffeb3b",
-    };
+    if (!currentSlotKey.value) {
+      console.error("슬롯 키가 없습니다!");
+      return;
+    }
 
-    // 기존 선수 데이터에 teamColor를 안전하게 병합
+    // 1. 새로운 선수 객체 생성 (기존 정보 + 팀 컬러 추가)
     const playerWithColor = {
       ...player,
-      teamColor: teamColors[player.team] || "#ffffff", // 매칭되는 팀이 없으면 흰색
+      teamColor: teamColors[player.team] || "#ffffff",
     };
 
+    // 2. 반응형 데이터인 squad에 정확한 키값으로 할당 (예: 'DF1', 'MF2')
     squad.value[currentSlotKey.value] = playerWithColor;
+
+    // 3. 해당 슬롯의 가챠 결과 데이터 삭제 (다시 뽑을 때 새로운 목록을 위해)
     delete currentGachaResults.value[currentSlotKey.value];
+
+    // 4. 모달 닫기 및 초기화
     isModalOpen.value = false;
+    gachaOptions.value = [];
+
+    console.log(
+      `${currentSlotKey.value} 슬롯에 선수 배치 완료:`,
+      playerWithColor.name,
+    );
   };
 
   // 3. (옵션) 가차 리스트 생성 시에도 색상을 미리 넣어두고 싶다면 openGacha 수정
-  const openGacha = (pos, n) => {
-    const slotKey = pos + n;
-    if (squad.value[slotKey] || !playerDb.value[pos]) return;
+  const openGacha = (category, n) => {
+    const slotKey = category + n; // 예: 'DF1', 'MF2'
 
-    currentPos.value = pos;
+    // 1. 이미 선수가 있거나 해당 카테고리 데이터가 없으면 리턴
+    // (category가 'DF', 'MF', 'FW'이므로 playerDb에 해당 키가 있는지 확인)
+    if (squad.value[slotKey] || !playerDb.value[category]) return;
+
+    currentPos.value = category;
     currentSlotKey.value = slotKey;
 
+    // 2. 이미 해당 슬롯의 가챠 결과가 저장되어 있다면 그대로 사용
     if (currentGachaResults.value[slotKey]) {
       gachaOptions.value = currentGachaResults.value[slotKey];
     } else {
-      const takenIds = Object.values(squad.value).map((p) => p.id);
-      const filteredPool = playerDb.value[pos].filter(
+      // 3. 현재 스쿼드에 이미 들어있는 선수 ID 제외
+      const takenIds = Object.values(squad.value)
+        .filter((p) => p)
+        .map((p) => p.id);
+
+      // 4. 세분화된 포지션 상관없이 'MF' 그룹이면 MF 전체에서 추출
+      const filteredPool = playerDb.value[category].filter(
         (p) => !takenIds.includes(p.id),
       );
 
-      // 뽑기 옵션 생성 시 미리 색상을 매칭함
+      // 5. 랜덤하게 3명 뽑기
       const newOptions = [...filteredPool]
         .sort(() => 0.5 - Math.random())
         .slice(0, 3)
@@ -290,18 +304,26 @@ export function useGacha() {
 
     let level = 0,
       buff = 0;
-    if (maxCount >= 8) {
+    if (maxCount >= 9) {
       level = 3;
       buff = 5;
-    } else if (maxCount >= 5) {
+    } else if (maxCount >= 6) {
       level = 2;
       buff = 3;
     } else if (maxCount >= 3) {
       level = 1;
-      buff = 1;
+      buff = 2;
     }
 
     return { name: mainTeam, level, buff, count: maxCount };
+  });
+
+  const formation = ref({
+    name: "4-3-3",
+    fw: 3,
+    wm: 0,
+    cm: 3,
+    df: 4,
   });
 
   return {
@@ -330,5 +352,6 @@ export function useGacha() {
     averageOvr,
     teamColorInfo,
     squad,
+    formation,
   };
 }
