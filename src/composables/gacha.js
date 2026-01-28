@@ -214,6 +214,7 @@ export function useGacha() {
   };
   const submitSave = async () => {
     // 1. 로그인 여부 확인
+    console.log("저장 버튼 클릭됨!");
     if (!isLoggedIn.value || !auth.currentUser) {
       authMode.value = "login";
       isSaveModalOpen.value = true;

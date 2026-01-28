@@ -191,7 +191,7 @@ const {
         팀을 저장해야 선수들이<br />
         사라지지 않아요!
       </div>
-      <button class="floating-save-btn" @click="openSaveModal">
+      <button class="floating-save-btn" @click="submitSave">
         <span class="icon">💾</span> 팀 저장하기
       </button>
     </div>
