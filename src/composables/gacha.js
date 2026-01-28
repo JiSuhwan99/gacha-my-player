@@ -37,16 +37,16 @@ export function useGacha() {
       console.error("데이터 로드 실패", e);
     }
 
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // 로그인된 상태
         isLoggedIn.value = true;
-        loadUserSquad();
-        console.log("로그인 유지 성공:", user.displayName);
+        console.log("로그인 확인:", user.displayName);
+        await loadUserSquad(user.uid);
       } else {
-        // 로그아웃된 상태
+        // 🔴 로그아웃 되었을 때 처리
         isLoggedIn.value = false;
-        squad.value = {};
+        isSaved.value = false; // ✅ 여기서 false로 바꿔줘야 로그아웃 시 버튼이 다시 나타납니다!
+        squad.value = {}; // (선택사항) 로그아웃 시 화면의 선수들도 비우고 싶다면 추가
       }
     });
   });
@@ -206,10 +206,13 @@ export function useGacha() {
 
   const handleLogout = async () => {
     try {
-      await auth.signOut();
+      await signOut(auth);
+      isLoggedIn.value = false;
+      isSaved.value = false; // ✅ 로그아웃 버튼 클릭 시 즉시 초기화
+      squad.value = {};
       triggerToast("로그아웃 되었습니다.");
-    } catch (e) {
-      triggerToast("로그아웃 실패");
+    } catch (error) {
+      console.error("로그아웃 에러:", error);
     }
   };
 
@@ -225,53 +228,44 @@ export function useGacha() {
 
     try {
       const user = auth.currentUser;
-      console.log("저장 시도 유저:", user.uid);
-      console.log("저장할 데이터:", squad.value);
-
       const userRef = dbRef(database, `users/${user.uid}`);
 
-      // 데이터 전송 시도
       await set(userRef, {
         nickname: user.displayName || "익명",
         squad: squad.value,
         updatedAt: Date.now(),
       });
 
-      console.log("Firebase 전송 완료!");
+      isSaved.value = true; // ✅ 저장 성공하면 버튼 숨기기 위해 true!
       triggerToast("성공적으로 저장되었습니다!");
-      isSaveModalOpen.value = false;
     } catch (e) {
-      // 여기가 중요합니다! 에러가 나면 콘솔에 빨간 글씨가 뜰 거예요.
-      console.error("Firebase 저장 에러 상세:", e);
-      triggerToast("저장 중 오류 발생: " + e.message);
+      console.error(e);
     }
   };
 
-  const loadUserSquad = async () => {
-    // 1. 로그인이 안 되어 있으면 중단
-    if (!auth.currentUser) return;
+  const isSaved = ref(false); // 저장 여부 상태 추가
 
+  // 1. 데이터를 불러올 때 확인
+  const loadUserSquad = async (uid) => {
     try {
-      // 2. Realtime Database 경로 설정 (users/UID)
-      const userRef = dbRef(database, `users/${auth.currentUser.uid}`);
-
-      // 3. 데이터 가져오기
+      const userRef = dbRef(database, `users/${uid}`);
       const snapshot = await get(userRef);
 
       if (snapshot.exists()) {
-        const userData = snapshot.val();
-        // 4. 저장된 squad 데이터를 현재 화면(squad.value)에 주입
-        squad.value = userData.squad || {};
-        console.log("스쿼드를 불러왔습니다:", userData.squad);
-      } else {
-        console.log("저장된 스쿼드가 없습니다.");
+        const data = snapshot.val();
+        if (data.squad && Object.keys(data.squad).length > 0) {
+          squad.value = data.squad;
+          isSaved.value = true; // ✅ 저장된 데이터가 있으면 true!
+          console.log("저장된 스쿼드 로드 완료");
+        }
       }
-    } catch (e) {
-      console.error("데이터 불러오기 실패:", e);
+    } catch (error) {
+      console.error("불러오기 에러:", error);
     }
   };
 
   return {
+    isSaved,
     isModalOpen,
     isSaveModalOpen,
     gachaOptions,

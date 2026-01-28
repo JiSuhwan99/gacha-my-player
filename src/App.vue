@@ -24,6 +24,7 @@ const {
   handleLogin,
   handleLogout,
   submitSave,
+  isSaved,
 } = useGacha();
 </script>
 
@@ -186,7 +187,7 @@ const {
       </div>
     </Transition>
 
-    <div class="save-btn-wrapper">
+    <div class="save-btn-wrapper" v-if="!isSaved">
       <div class="tooltip-base">
         팀을 저장해야 선수들이<br />
         사라지지 않아요!
