@@ -212,45 +212,38 @@ export function useGacha() {
       triggerToast("로그아웃 실패");
     }
   };
+
   const submitSave = async () => {
-    // 1. 로그인 여부 확인
-    console.log("저장 버튼 클릭됨!");
+    console.log("저장 프로세스 시작!"); // 확인용
+
     if (!isLoggedIn.value || !auth.currentUser) {
+      console.log("로그인 안 됨 -> 모달 오픈");
       authMode.value = "login";
       isSaveModalOpen.value = true;
       return;
     }
 
-    // 2. 현재 필드(squad)가 비어있는지 확인
-    if (Object.keys(squad.value).length === 0) {
-      triggerToast("저장할 팀이 없습니다. 가챠를 먼저 해주세요!");
-      return;
-    }
-
     try {
-      const userRef = dbRef(database, `users/${auth.currentUser.uid}`);
+      const user = auth.currentUser;
+      console.log("저장 시도 유저:", user.uid);
+      console.log("저장할 데이터:", squad.value);
 
-      // 3. 이미 저장된 데이터가 있는지 먼저 가져와보기 (선택 사항)
-      const snapshot = await get(userRef);
+      const userRef = dbRef(database, `users/${user.uid}`);
 
-      if (snapshot.exists()) {
-        // 이미 데이터가 있다면? -> 덮어쓸지 물어보거나 메시지 출력
-        // 여기서는 바로 덮어쓰거나 알림을 띄울 수 있습니다.
-        console.log("기존 팀 데이터 발견:", snapshot.val());
-      }
-
-      // 4. 데이터 저장
+      // 데이터 전송 시도
       await set(userRef, {
-        nickname: auth.currentUser.displayName,
+        nickname: user.displayName || "익명",
         squad: squad.value,
         updatedAt: Date.now(),
       });
 
+      console.log("Firebase 전송 완료!");
       triggerToast("성공적으로 저장되었습니다!");
-      isSaveModalOpen.value = false; // 저장 후 모달 닫기
+      isSaveModalOpen.value = false;
     } catch (e) {
-      console.error("저장 에러:", e);
-      triggerToast("저장 중 오류가 발생했습니다.");
+      // 여기가 중요합니다! 에러가 나면 콘솔에 빨간 글씨가 뜰 거예요.
+      console.error("Firebase 저장 에러 상세:", e);
+      triggerToast("저장 중 오류 발생: " + e.message);
     }
   };
 
