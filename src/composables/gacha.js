@@ -1,5 +1,6 @@
 import { ref, onMounted } from "vue";
-import { auth, db } from "../firebase.js";
+import { auth, database } from "../firebase.js";
+import { ref as dbRef, set, get } from "firebase/database";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
