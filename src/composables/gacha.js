@@ -254,10 +254,26 @@ export function useGacha() {
   };
 
   const loadUserSquad = async () => {
+    // 1. 로그인이 안 되어 있으면 중단
     if (!auth.currentUser) return;
-    const docSnap = await getDoc(doc(db, "squads", auth.currentUser.uid));
-    if (docSnap.exists()) {
-      squad.value = docSnap.data().squad;
+
+    try {
+      // 2. Realtime Database 경로 설정 (users/UID)
+      const userRef = dbRef(database, `users/${auth.currentUser.uid}`);
+
+      // 3. 데이터 가져오기
+      const snapshot = await get(userRef);
+
+      if (snapshot.exists()) {
+        const userData = snapshot.val();
+        // 4. 저장된 squad 데이터를 현재 화면(squad.value)에 주입
+        squad.value = userData.squad || {};
+        console.log("스쿼드를 불러왔습니다:", userData.squad);
+      } else {
+        console.log("저장된 스쿼드가 없습니다.");
+      }
+    } catch (e) {
+      console.error("데이터 불러오기 실패:", e);
     }
   };
 

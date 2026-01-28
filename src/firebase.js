@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getDatabase } from "firebase/database"; // 1. Realtime DB 불러오기
 
 const firebaseConfig = {
   apiKey: "AIzaSyBytCsVpW_pNzhVa7SumWiLIs2wDSohORM",
@@ -13,5 +14,9 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 
-export const db = getFirestore(app);
-export const auth = getAuth(app);
+// 2. 서비스 객체 생성
+const auth = getAuth(app);
+const database = getDatabase(app); // 3. database 변수 생성
+
+// 4. 외부에서 쓸 수 있게 내보내기 (이 부분이 핵심!)
+export { auth, database };
