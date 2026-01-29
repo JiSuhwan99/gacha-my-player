@@ -2,7 +2,6 @@
 import { useGacha } from "./composables/gacha.js";
 
 const {
-  dragOverSlotKey,
   isSaved,
   isModalOpen,
   isSaveModalOpen,
@@ -27,20 +26,11 @@ const {
   handleImageError,
   averageOvr,
   teamColorInfo,
-  formationRows,
   formation,
   formationPresets,
   changeFormation,
-  getCategory,
   onDragStart,
   onDrop,
-  onDragEnter,
-  onDragLeave,
-  selectedPlayerForView,
-  showDetailModal,
-  openPlayerDetail,
-  closeDetailModal,
-  isReadyToShowField,
 } = useGacha();
 </script>
 
@@ -77,94 +67,151 @@ const {
       <div class="spacer"></div>
 
       <section class="field-area">
-        <nav class="formation-selector">
-          <button
-            v-for="(slots, name) in formationPresets"
-            :key="name"
-            :class="{ active: formation.name === name }"
-            @click="changeFormation(name)"
-          >
-            {{ name }}
-          </button>
-        </nav>
-
-        <div v-if="isReadyToShowField" class="field">
-          <div
-            v-for="(row, rowIndex) in formationRows"
-            :key="'row-' + rowIndex"
-            class="squad-row"
-          >
-            <div
-              v-for="slot in row"
-              :key="slot.slotKey"
-              class="player-slot"
-              :class="{ 'is-drag-over': dragOverSlotKey === slot.slotKey }"
-              :draggable="!!squad[slot.slotKey]"
-              @dragstart="onDragStart($event, slot.slotKey)"
-              @dragover.prevent
-              @dragenter="onDragEnter(slot.slotKey)"
-              @dragleave="onDragLeave"
-              @drop="onDrop(slot.slotKey)"
-              @click="openGacha(slot.pos, slot.index)"
-              @contextmenu="openPlayerDetail($event, squad[slot.slotKey])"
+        <div class="field">
+          <nav class="formation-selector">
+            <button
+              v-for="(slots, name) in formationPresets"
+              :key="name"
+              :class="{ active: formation.name === name }"
+              @click="changeFormation(name)"
             >
-              <div v-if="squad[slot.slotKey]" class="player-card">
-                <div
-                  class="team-dot"
-                  :style="{ backgroundColor: squad[slot.slotKey].teamColor }"
-                ></div>
-                <img
-                  :src="squad[slot.slotKey].image"
-                  class="p-img"
-                  @error="handleImageError"
-                  @dragstart.prevent
-                />
-                <div class="p-info">
-                  <span class="p-name">{{ squad[slot.slotKey].name }}</span>
-                </div>
-              </div>
-              <span v-else class="pos-label">{{ slot.pos }}</span>
-            </div>
-          </div>
-        </div>
+              {{ name }}
+            </button>
+          </nav>
 
-        <div v-else class="empty-state">
-          <div class="field">
-            <div
-              v-for="(row, rowIndex) in formationRows"
-              :key="'row-' + rowIndex"
-              class="squad-row"
-            >
+          <div class="row fw-row">
+            <template v-for="(pos, i) in formation.activeSlots">
               <div
-                v-for="slot in row"
-                :key="slot.slotKey"
-                class="player-slot fixed-mode"
-                @click="openGacha(slot.pos, slot.index)"
-                @contextmenu="openPlayerDetail($event, squad[slot.slotKey])"
+                v-if="['ST', 'WF', 'CF'].includes(pos)"
+                :key="`fw-${pos}-${i}`"
+                class="player-slot"
+                :draggable="!!squad[pos + i]"
+                @dragstart="onDragStart($event, pos + i)"
+                @dragover.prevent
+                @drop="onDrop(pos + i)"
+                @click="openGacha(pos, i)"
               >
-                <div v-if="squad[slot.slotKey]" class="player-card">
+                <div v-if="squad[pos + i]" class="player-card">
                   <div
                     class="team-dot"
-                    :style="{ backgroundColor: squad[slot.slotKey].teamColor }"
+                    :style="{ backgroundColor: squad[pos + i].teamColor }"
                   ></div>
                   <img
-                    :src="squad[slot.slotKey].image"
+                    :src="squad[pos + i].image"
                     class="p-img"
-                    @error="handleImageError"
+                    @dragstart.prevent
                   />
                   <div class="p-info">
-                    <span class="p-name">{{ squad[slot.slotKey].name }}</span>
+                    <span class="p-name">{{ squad[pos + i].name }}</span>
                   </div>
                 </div>
 
-                <span v-else class="pos-label">{{ slot.pos }}</span>
+                <span v-else class="pos-label">{{ pos }}</span>
               </div>
-            </div>
+            </template>
+          </div>
+
+          <div class="row mid-row">
+            <template v-for="(pos, i) in formation.activeSlots">
+              <div
+                v-if="['AM', 'CM', 'DM', 'WM', 'RM', 'LM'].includes(pos)"
+                :key="`mf-${pos}-${i}`"
+                class="player-slot"
+                :draggable="!!squad[pos + i]"
+                @dragstart="onDragStart($event, pos + i)"
+                @dragover.prevent
+                @drop="onDrop(pos + i)"
+                @click="openGacha(pos, i)"
+              >
+                <div v-if="squad[pos + i]" class="player-card">
+                  <div
+                    class="team-dot"
+                    :style="{ backgroundColor: squad[pos + i].teamColor }"
+                  ></div>
+                  <img
+                    :src="squad[pos + i].image"
+                    class="p-img"
+                    @dragstart.prevent
+                  />
+                  <div class="p-info">
+                    <span class="p-name">{{ squad[pos + i].name }}</span>
+                  </div>
+                </div>
+
+                <span v-else class="pos-label">{{ pos }}</span>
+              </div>
+            </template>
+          </div>
+
+          <div class="row df-row">
+            <template v-for="(pos, i) in formation.activeSlots">
+              <div
+                v-if="
+                  ['LB', 'CB', 'RB', 'LWB', 'RWB', 'CB', 'CB'].includes(pos)
+                "
+                :key="`df-${pos}-${i}`"
+                class="player-slot"
+                :draggable="!!squad[pos + i]"
+                @dragstart="onDragStart($event, pos + i)"
+                @dragover.prevent
+                @drop="onDrop(pos + i)"
+                @click="openGacha(pos, i)"
+              >
+                <div v-if="squad[pos + i]" class="player-card">
+                  <div
+                    class="team-dot"
+                    :style="{ backgroundColor: squad[pos + i].teamColor }"
+                  ></div>
+                  <img
+                    :src="squad[pos + i].image"
+                    class="p-img"
+                    @dragstart.prevent
+                  />
+                  <div class="p-info">
+                    <span class="p-name">{{ squad[pos + i].name }}</span>
+                  </div>
+                </div>
+
+                <span v-else class="pos-label">{{ pos }}</span>
+              </div>
+            </template>
+          </div>
+
+          <div class="row gk-row">
+            <template v-for="(pos, i) in formation.activeSlots">
+              <div
+                v-if="['GK'].includes(pos)"
+                :key="`gk-${pos}-${i}`"
+                class="player-slot"
+                :draggable="!!squad[pos + i]"
+                @dragstart="onDragStart($event, pos + i)"
+                @dragover.prevent
+                @drop="onDrop(pos + i)"
+                @click="openGacha(pos, i)"
+              >
+                <div v-if="squad[pos + i]" class="player-card">
+                  <div
+                    class="team-dot"
+                    :style="{ backgroundColor: squad[pos + i].teamColor }"
+                  ></div>
+                  <img
+                    :src="squad[pos + i].image"
+                    class="p-img"
+                    @dragstart.prevent
+                  />
+                  <div class="p-info">
+                    <span class="p-name">{{ squad[pos + i].name }}</span>
+                  </div>
+                </div>
+
+                <span v-else class="pos-label">{{ pos }}</span>
+              </div>
+            </template>
           </div>
         </div>
       </section>
 
-      <aside v-if="isReadyToShowField" class="info-sidebar">
+      <aside class="info-sidebar">
         <div class="info-card-container">
           <div class="info-card highlight">
             <div class="card-label">평균 OVR</div>
@@ -195,11 +242,7 @@ const {
         <div class="tooltip-base">
           팀을 저장해야 선수들이<br />사라지지 않아요!
         </div>
-        <button
-          v-if="!isLoggedIn"
-          class="floating-save-btn"
-          @click="submitSave"
-        >
+        <button class="floating-save-btn" @click="submitSave">
           <span class="icon">💾</span> 팀 저장하기
         </button>
       </div>
@@ -225,14 +268,13 @@ const {
                 :style="{ backgroundColor: player?.teamColor || '#ffffff' }"
               ></div>
               <img
-                :src="player?.image"
+                :src="player.image || '/images/unknown_player.png'"
                 class="p-img"
                 @error="handleImageError"
-                @dragstart.prevent
               />
               <div class="p-info">
-                <span class="p-stat">{{ player?.stat }}</span>
-                <span class="p-name">{{ player?.name }}</span>
+                <span class="p-stat">{{ player.stat }}</span>
+                <span class="p-name">{{ player.name }}</span>
                 <span class="p-badge">{{ currentPos }}</span>
               </div>
             </div>
@@ -303,39 +345,6 @@ const {
               <span @click="authMode = 'login'">로그인</span>
             </p>
           </div>
-        </div>
-      </div>
-    </Transition>
-
-    <Transition name="fade">
-      <div
-        v-if="showDetailModal"
-        class="modal-overlay detail-mode"
-        @click.self="closeDetailModal"
-      >
-        <div class="modal-content detail-content">
-          <h2 class="gacha-title">선수 상세 정보</h2>
-
-          <div class="p-info">
-            <span class="p-name">{{ selectedPlayerForView?.name }}</span>
-
-            <div
-              v-if="
-                ['RB', 'RWB', 'RM'].includes(
-                  selectedPlayerForView?.pos?.toUpperCase(),
-                )
-              "
-              class="my-pos-tag"
-            >
-              ✨ 내 포지션 선수!
-            </div>
-
-            <span class="p-stat"
-              >능력치: {{ selectedPlayerForView?.stat }}</span
-            >
-          </div>
-
-          <button class="close-btn" @click="closeDetailModal">닫기</button>
         </div>
       </div>
     </Transition>

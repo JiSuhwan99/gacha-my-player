@@ -134,14 +134,17 @@ header {
 }
 .field-area {
   width: 600px;
-  height: 800px;
+  height: auto;
   border: 2px solid #fff;
   border-radius: 10px;
   position: relative;
-  padding: 30px 0;
   margin-top: 30px;
   background: #121213;
   z-index: 100;
+  padding: 30px;
+  display: flex;
+  flex-flow: column;
+  gap: 30px;
 }
 .spacer {
   width: 200px; /* (정보창 너비 300px + 간격 20px) 와 똑같이 설정 */
@@ -250,16 +253,15 @@ header {
 .field {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
+  justify-content: center;
+  align-items: center;
+  height: auto;
+  gap: 20px;
 }
 
-.row {
+.squad-row {
   display: flex;
   justify-content: center;
-}
-.row.wingbacks {
-  justify-content: space-between;
 }
 .player-slot {
   width: 100px;
@@ -614,4 +616,79 @@ header {
 
 .auth-switch span:hover {
   color: #fff;
+}
+.formation-selector {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.formation-selector button {
+  padding: 8px 16px;
+  border: 1px solid #444;
+  background: #222;
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.formation-selector button.active {
+  background: #007bff;
+  border-color: #007bff;
+  font-weight: bold;
+}
+.save-btn {
+  width: 100%;
+  padding: 14px;
+  font-weight: bold;
+  color: white;
+  background-color: #2196f3; /* 기본 파란색 */
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.save-btn:hover {
+  background-color: #1976d2;
+}
+
+.player-slot[draggable="true"] {
+  cursor: grab;
+}
+.player-slot:active {
+  cursor: grabbing;
+  opacity: 0.3;
+  transition: all 0.1s;
+}
+.player-card {
+}
+.p-img {
+  -webkit-user-drag: none;
+}
+.player-slot.drag-over {
+  outline: 2px solid #ffeb3b;
+  background-color: rgba(255, 235, 59, 0.1);
+  border-radius: 8px;
+}
+
+/* 기존 가챠 모달보다 더 크게 강조 */
+.detail-mode .modal-content {
+  width: 500px; /* 기존보다 너비 확장 */
+  padding: 40px;
+  border: 2px solid gold; /* 특별한 느낌 */
+}
+
+.big-view {
+  transform: scale(1.5); /* 카드 자체를 키움 */
+  margin: 50px 0;
+}
+
+.big-img {
+  width: 200px !important; /* 이미지 크기 강제 확대 */
+}
+.p-extra-info {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: #ccc;
 }
