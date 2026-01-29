@@ -34,6 +34,17 @@ header {
   position: absolute;
   right: 0;
   top: 0;
+  display: flex;
+  flex-flow: row nowrap;
+  gap: 10px;
+  height: 100%;
+}
+.auth-area-box {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: flex-start;
+  gap: 10px;
+  height: 100%;
 }
 .user-logged-in {
   display: flex;
@@ -44,15 +55,13 @@ header {
 }
 .user-info {
   font-size: 0.8rem;
+  position: absolute;
+  bottom: 0;
+  right: 0;
 }
-.login-btn {
-  background: transparent;
-  border: 1px solid #00ffcc;
-  color: #00ffcc;
-  padding: 5px 15px;
-  border-radius: 4px;
-  cursor: pointer;
-}
+.menu-btn,
+.signup-btn,
+.login-btn,
 .logout-btn {
   background: transparent;
   border: 1px solid #00ffcc;
@@ -60,6 +69,113 @@ header {
   padding: 5px 15px;
   border-radius: 4px;
   cursor: pointer;
+  max-height: 45px;
+}
+
+/* 상단 메뉴 본체 */
+.top-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(18, 18, 18, 0.95); /* 반투명 블랙 */
+  backdrop-filter: blur(10px); /* 배경 흐리게 */
+  z-index: 2000;
+  transform: translateY(-100%);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 3px solid #333;
+  border-top: 0px;
+  box-shadow: 0 50px 30px rgba(0, 0, 0, 0.2);
+  border-radius: 0px 0px 200px 200px;
+  overflow: hidden;
+}
+
+.top-menu.is-open {
+  transform: translateY(0);
+}
+
+/* 카드 그리드 레이아웃 */
+.menu-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+}
+
+/* 개별 메뉴 카드 */
+.menu-card {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  background: #252525;
+  border: 1px solid #333;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.menu-card:hover {
+  background: #333;
+  border-color: #af8b4c;
+  transform: translateY(5px); /* 아래로 살짝 내려가는 느낌 */
+}
+
+.menu-card .icon {
+  font-size: 2rem;
+  margin-right: 15px;
+}
+
+.menu-card .info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.menu-card .label {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+.menu-card .desc {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 4px;
+}
+
+/* 하단 닫기 바 */
+.menu-footer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.full-close-btn {
+  width: 100%;
+  padding: 15px;
+  background: #000;
+  border: none;
+  color: #aaa;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.full-close-btn:hover {
+  color: #fff;
+  background: #080808;
+}
+
+/* 배경 오버레이 */
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1999;
+}
+.view-field {
+  display: flex;
 }
 
 /* 저장 모달 내부 입력창 디자인 */
@@ -131,6 +247,7 @@ header {
   flex-flow: row;
   justify-content: center;
   position: relative;
+  flex: 1;
 }
 .field-area {
   width: 600px;
@@ -144,6 +261,8 @@ header {
   padding: 30px;
   display: flex;
   flex-flow: column;
+  justify-content: center;
+  align-items: center;
   gap: 30px;
 }
 .spacer {
@@ -256,7 +375,7 @@ header {
   justify-content: center;
   align-items: center;
   height: auto;
-  gap: 20px;
+  gap: 50px;
 }
 
 .squad-row {
@@ -274,6 +393,15 @@ header {
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.player-box {
+  width: 100px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
 .pos-label {
@@ -618,24 +746,73 @@ header {
   color: #fff;
 }
 .formation-selector {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
+  position: relative; /* 드롭다운의 기준점 */
+  width: 100%;
+  margin-bottom: 20px;
+  font-size: 0.8rem;
 }
 
-.formation-selector button {
-  padding: 8px 16px;
-  border: 1px solid #444;
-  background: #222;
+.menu-trigger {
+  width: 100%;
+  padding: 10px 15px;
+  background: rgba(0, 0, 0, 0.5);
   color: white;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   cursor: pointer;
-  border-radius: 4px;
 }
 
-.formation-selector button.active {
-  background: #007bff;
-  border-color: #007bff;
+.arrow-icon {
+  transition: transform 0.3s ease;
+  font-size: 0.8rem;
+}
+.arrow-icon.is-open {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  width: 100%;
+  background: #0c0c0c;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 100; /* 필드보다 위에 뜨도록 */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.dropdown-menu button {
+  width: 100%;
+  padding: 12px;
+  background: none;
+  border: none;
+  color: #ccc;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dropdown-menu button:hover {
+  background: #444;
+  color: white;
+}
+
+.dropdown-menu button.active {
+  color: #4CAF50; /* 유저님의 필드 색상과 맞춤 */
   font-weight: bold;
+}
+
+/* 애니메이션 */
+.slide-fade-enter-active, .slide-fade-leave-active {
+  transition: all 0.3s ease;
+}
+.slide-fade-enter-from, .slide-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 .save-btn {
   width: 100%;
@@ -653,20 +830,18 @@ header {
   background-color: #1976d2;
 }
 
-.player-slot[draggable="true"] {
+.player-box[draggable="true"] {
   cursor: grab;
 }
-.player-slot:active {
+.player-box:active {
   cursor: grabbing;
   opacity: 0.3;
   transition: all 0.1s;
 }
-.player-card {
-}
 .p-img {
   -webkit-user-drag: none;
 }
-.player-slot.drag-over {
+.player-box.drag-over {
   outline: 2px solid #ffeb3b;
   background-color: rgba(255, 235, 59, 0.1);
   border-radius: 8px;
@@ -690,5 +865,228 @@ header {
 .p-extra-info {
   margin-top: 10px;
   font-size: 0.9rem;
+  color: #ccc;
+}
+.detail-mode .player-card {
+  width: 400px;
+  height: 560px;
+  pointer-events: none;
+}
+.detail-mode .player-card .p-info {
+}
+.detail-mode .player-card .p-name {
+  font-size: 2rem;
+}
+.detail-mode .player-card .p-stat {
+  font-size: 4rem;
+}
+.detail-mode .player-position-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.detail-mode .p-badge {
+  background: #006357;
+  color: #f3f3f3;
+  padding: 4px 15px;
+  border-radius: 10px;
+  z-index: 3;
+  font-size: 1.2rem;
+}
+.field .player-slot,
+.field .player-box {
+  margin-right: 20px;
+}
+
+.empty-state .squad-row .player-slot:last-child,
+.field .squad-row .player-box:last-child {
+  margin-right: 0px;
+}
+.empty-state.f-4-2-3-1 .field,
+.field.f-4-2-3-1 {
+  gap: 20px;
+}
+.empty-state.f-4-2-3-1 .player-slot.dm-2,
+.empty-state.f-4-2-3-1 .player-slot.dm-4,
+.field.f-4-2-3-1 .player-box.dm-2,
+.field.f-4-2-3-1 .player-box.dm-4 {
+  margin-top: 90px;
+}
+.field.f-3-5-2 {
+  gap: 30px;
+}
+.empty-state.f-3-5-2 .player-slot.cm-3,
+.field.f-3-5-2 .player-box.cm-3 {
+  margin-top: 60px;
+}
+.empty-state.f-3-5-2 .player-slot.lwb,
+.empty-state.f-3-5-2 .player-slot.rwb, 
+.field.f-3-5-2 .player-box.lwb,
+.field.f-3-5-2 .player-box.rwb {
+  margin-top: -100px;
+}
+.empty-state.f-5-4-1 .player-slot.lwb,
+.empty-state.f-5-4-1 .player-slot.rwb,
+.empty-state.f-5-4-1 .player-slot.wm,
+.field.f-5-4-1 .player-box.lwb,
+.field.f-5-4-1 .player-box.rwb,
+.field.f-5-4-1 .player-box.wm {
+  margin-top: -100px;
+}
+.field-transition-enter-from,
+.field-transition-leave-to {
+  opacity: 0;
+}
+
+.field-transition-enter-active,
+.field-transition-leave-active {
+  transition: all 0.5s ease;
+}
+
+.field-transition-move {
+  transition: transform 0.5s ease;
+}
+
+
+
+
+
+
+/*storage css*/
+/* 보관함 전체 배경 - 필드 배경과 통일 */
+.storage-field {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #121212; /* 메인 배경색 */
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* 헤더: 뒤로가기 버튼과 요약 정보 */
+.storage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0 20px 0;
+  border-bottom: 1px solid #333;
+  margin-bottom: 20px;
+}
+
+.back-btn {
+  background: #252525;
+  border: 1px solid #444;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.back-btn:hover {
+  background: #333;
+}
+
+/* 🏆 스크롤 영역 */
+.storage-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+/* 포지션 그룹 제목 - 이미지의 우측 패널 텍스트 스타일 참고 */
+.position-group {
+  margin-bottom: 40px;
+}
+
+.pos-title {
+  color: #4CAF50; /* 포인트 그린 */
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pos-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #333;
+}
+
+/* 🎴 카드 그리드 - 이미지의 카드 디자인 복제 */
+.player-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 15px;
+}
+
+/* 이미지 속 민트색 카드 디자인 반영 */
+.storage-card {
+  aspect-ratio: 3 / 4;
+  background: linear-gradient(180deg, #42f2d1 0%, #2a9d8f 100%); /* 이미지 속 민트 그라데이션 */
+  border-radius: 8px;
+  position: relative;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.storage-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(66, 242, 209, 0.5);
+}
+
+/* 카드 상단 포인트 점 (이미지의 오렌지/레드/블루 점) */
+.card-dot {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #ff9800; /* 포지션에 따라 동적 변경 가능 */
+}
+
+/* 카드 내부 선수 실루엣 아이콘 (필요시) */
+.card-avatar {
+  width: 60%;
+  opacity: 0.3;
+  margin-bottom: 10px;
+}
+
+/* 카드 하단 텍스트 정보 */
+.card-info {
+  background: rgba(0, 0, 0, 0.6); /* 텍스트 가독성을 위한 반투명 바 */
+  width: 100%;
+  padding: 5px 0;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.card-name {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-pos-text {
+  font-size: 0.65rem;
   color: #ccc;
 }

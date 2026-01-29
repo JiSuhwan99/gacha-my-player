@@ -1,6 +1,6 @@
-import { ref, onMounted, computed } from "vue"; // computed 추가
+import { ref, onMounted, computed, watch } from "vue"; // computed 추가
 import { auth, database } from "../firebase.js";
-import { ref as dbRef, set, get } from "firebase/database";
+import { ref as dbRef, set, get, child } from "firebase/database";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -35,6 +35,7 @@ export function useGacha() {
 const formationPresets = {
     "4-3-3": ["WF", "ST", "WF", "CM", "CM", "CM", "LB", "CB", "CB", "RB", "GK"],
     "4-4-2": ["ST", "ST", "WM", "CM", "CM", "WM", "LB", "CB", "CB", "RB", "GK"],
+    "4-2-3-1": ["ST", "WM", "DM", "AM", "DM", "WM", "LB", "CB", "CB", "RB", "GK"],
     "3-5-2": [
       "ST",
       "ST",
@@ -48,7 +49,21 @@ const formationPresets = {
       "RWB",
       "GK",
     ],
+    "5-4-1": [
+      "ST",
+      "WM",
+      "CM",
+      "CM",
+      "WM",
+      "LWB",
+      "CB",
+      "CB",
+      "CB",
+      "RWB",
+      "GK",
+    ],
   };
+
 const formation = ref({
     name: "4-3-3",
     activeSlots: formationPresets["4-3-3"],
@@ -92,6 +107,7 @@ const formation = ref({
       if (user) {
         isLoggedIn.value = true;
         isSaveModalOpen.value = false; // 로그인 감지되면 모달 닫기
+        isReadyToShowField.value = true; 
         await loadUserSquad(user.uid);
       } else {
         isLoggedIn.value = false;
@@ -280,6 +296,7 @@ const formation = ref({
       isSaved.value = false;
       squad.value = {};
       triggerToast("로그아웃 되었습니다.");
+      isReadyToShowField.value = false; 
     } catch (error) {
       console.error(error);
     }
@@ -593,9 +610,88 @@ const closeDetailModal = () => {
   showDetailModal.value = false;
 };
 
+const isMenuOpen = ref(false);
+
+// 포메이션 선택 시 메뉴를 닫아주는 함수
+const selectAndClose = (name) => {
+  if (typeof changeFormation === 'function') {
+    changeFormation(name); // 기존에 만드신 포메이션 변경 함수 호출
+  }
+  isMenuOpen.value = false; // 메뉴 닫기
+};
+
+const isTopMenuOpen = ref(false);
+
+const topSelectAndClose = (name) => {
+  // 1. 포메이션 변경 로직 실행
+  changeFormation(name); 
+  // 2. 메뉴 닫기
+  isMenuOpen.value = false;
+};
 
 
+
+// 현재 보고 있는 화면 상태 ('field', 'storage', 'shop' 등)
+const currentView = ref('field'); 
+
+// 보관함 열기
+const goToStorage = () => {
+  currentView.value = 'storage';
+  isMenuOpen.value = false; // 열려있던 메뉴는 닫기
+};
+
+// 메인(필드)으로 돌아가기
+const goToField = () => {
+  currentView.value = 'field';
+};
+
+const playerInventory = ref([]);
+
+// [핵심] 보관함으로 화면이 전환될 때 실행
+watch(() => currentView.value, async (newView) => {
+  if (newView === 'storage') {
+    await fetchUserInventory();
+  }
+});
+
+const fetchUserInventory = async () => {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  // Realtime Database의 경로 설정
+  // 예: users/사용자UID/database 에 선수들이 저장되어 있다고 가정
+  const userDbRef = dbRef(db);
+  
+  try {
+    const snapshot = await get(child(userDbRef, `users/${user.uid}/database`));
+    
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      
+      // Realtime DB는 객체 형태로 오기 때문에 배열로 변환해줘야 v-for가 돌아갑니다.
+      const players = Object.keys(data).map(key => ({
+        id: key,
+        ...data[key]
+      }));
+
+      playerInventory.value = players;
+      console.log("Realtime DB 로드 완료:", players.length);
+    } else {
+      playerInventory.value = [];
+      console.log("저장된 선수 데이터가 없습니다.");
+    }
+  } catch (error) {
+    console.error("Realtime DB 읽기 에러:", error);
+  }
+};
   return {
+    etchUserInventory,
+    child,
+    currentView,
+    goToStorage,
+    goToField,
+    isTopMenuOpen,
+    topSelectAndClose,
     isSaved,
     isModalOpen,
     isSaveModalOpen,
@@ -633,9 +729,12 @@ const closeDetailModal = () => {
     formationRows,
     dragOverSlotKey,
     isReadyToShowField,
-  selectedPlayerForView,
-  showDetailModal,
-  openPlayerDetail,
-  closeDetailModal
+    selectedPlayerForView,
+    showDetailModal,
+    openPlayerDetail,
+    closeDetailModal,
+    isMenuOpen,
+    selectAndClose,
+    playerInventory,
   };
 }
