@@ -1,500 +1,552 @@
 <script setup>
+import PlayerCard from './components/PlayerCard.vue'
 import { useGacha } from "./composables/gacha.js";
 
 const {
-  dragOverSlotKey,
-  isSaved,
-  isModalOpen,
-  isSaveModalOpen,
-  gachaOptions,
   squad,
-  saveData,
-  currentPos,
-  showToast,
-  toastMessage,
+  currentView,
+  goToShop,
+  goToStorage,
+  goToField,
+  isTopMenuOpen,
+  topSelectAndClose,
+  isMenuOpen,
+  selectAndClose,
+
   isLoggedIn,
-  auth,
   authMode,
-  openGacha,
-  selectPlayer,
-  triggerToast,
   openLoginModal,
   openRegisterModal,
+  openStorageModal,
   handleRegister,
   handleLogin,
   handleLogout,
-  submitSave,
-  handleImageError,
-  averageOvr,
-  teamColorInfo,
-  formationRows,
+  displayName,
+  userGold,
+
+  isModalOpen,
+  modalType,
+  openModal,
+  closeModal,
+
+  openGacha,
+  selectPlayer,
+  gachaOptions,
+  currentPos,
+
   formation,
   formationPresets,
+  formationRows,
   changeFormation,
-  getCategory,
+  isReadyToShowField,
+
   onDragStart,
   onDrop,
   onDragEnter,
   onDragLeave,
+  draggedSlotKey,
+  dragOverSlotKey,
+
+  averageOvr,
+  teamColorInfo,
+  isSaved,
+  saveTeamUpdate,
+  saveTeamInitial,
+  handleSaveClick,
+
+  playerInventory,
+  groupedInventory,
+  fetchUserInventory,
+
+  showToast,
+  toastMessage,
+  triggerToast,
+
   selectedPlayerForView,
-  showDetailModal,
   openPlayerDetail,
   closeDetailModal,
-  isReadyToShowField,
-  isMenuOpen,
-  selectAndClose,
-  isTopMenuOpen,
-  topSelectAndClose,
-  playerInventory,
-  currentView,
-  goToStorage,
-  goToField,
-
-  etchUserInventory,
-  child,
+  handleImageError,
+  saveData,
 } = useGacha();
 </script>
 
 <template>
-  <div class="game-wrapper">
-    <Transition name="slide-fade">
-      <div v-if="showToast" class="toast-message">
-        <span class="toast-icon">⚠️</span>
-        {{ toastMessage }}
-      </div>
-    </Transition>
-
-    <header class="header">
-      <div class="header-content">
-        <div class="header-text">
-          <h1 class="title">GACHA MY PLAYER</h1>
-          <p class="subtitle">나만의 베스트 11을 완성하세요</p>
-        </div>
-
-        <div class="auth-area">
-          <div class="auth-area-box">
-            <template v-if="!isLoggedIn">
-              <button class="login-btn" @click="openLoginModal">Login</button>
-              <button class="signup-btn" @click="openSignUpModal">
-                Sign Up
-              </button>
-            </template>
-            <div v-else class="user-logged-in">
-              <button class="logout-btn" @click="handleLogout">Logout</button>
+    <div class="game-wrapper">
+        <Transition name="slide-fade">
+            <div v-if="showToast" class="toast-message flex-center">
+                {{ toastMessage }}
             </div>
-            <button class="menu-btn" @click="isTopMenuOpen = true">Menu</button>
-            <span class="user-info">
-              나의 닉네임 : {{ auth.currentUser?.displayName || "감독" }}
-            </span>
-          </div>
-        </div>
-      </div>
+        </Transition>
 
-      <div :class="['top-menu', { 'is-open': isTopMenuOpen }]">
-        <div class="menu-container">
-          <div class="menu-grid">
-            <button class="menu-card storage" @click="goToField">
-              <span class="icon">📦</span>
-              <div class="info">
-                <span class="label">홈으로 이동</span>
-                <span class="desc">홈화면으로 이동하기</span>
-              </div>
-            </button>
-            <button class="menu-card storage" @click="goToStorage">
-              <span class="icon">📦</span>
-              <div class="info">
-                <span class="label">선수 보관함</span>
-                <span class="desc">획득한 선수 확인</span>
-              </div>
-            </button>
+        <header class="header">
+            <div class="header-content flex-center">
+                <div class="header-text">
+                    <h1 class="header-title">GACHA MY PLAYER</h1>
+                    <p class="header-sub-title">나만의 베스트 11을 완성하세요</p>
+                </div>
 
-            <button class="menu-card shop" @click="goToShop">
-              <span class="icon">💎</span>
-              <div class="info">
-                <span class="label">스페셜 상점</span>
-                <span class="desc">새로운 팩 뽑기</span>
-              </div>
-            </button>
+                <div class="auth-area">
+                    <div class="auth-area-box">
+                        <template v-if="!isLoggedIn">
+                            <button class="btn-type-1" @click="openLoginModal">로그인</button>
+                            
+                        </template>
+                        <div v-else class="user-logged-in">
+                            <button class="btn-type-1" @click="handleLogout">로그아웃</button>
+                        </div>
+                        <button class="btn-type-1" @click="isTopMenuOpen = true">메뉴</button>
+                        <div v-if="isLoggedIn" class="user-info">
+                          {{ displayName }}님
+                          <div class="user-points">
+                            <span class="points">{{ userGold.toLocaleString() }}</span>
+                            <span>G</span>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <button class="menu-card quest">
-              <span class="icon">📜</span>
-              <div class="info">
-                <span class="label">퀘스트</span>
-                <span class="desc">보상 수령하기</span>
-              </div>
-            </button>
+            <div :class="['top-menu', { 'is-open': isTopMenuOpen }]">
+                <div class="top-menu-container flex-center">
+                    <div v-if="isLoggedIn" class="top-menu-group">
+                        <button class="top-menu-card storage" @click="topSelectAndClose('field')">
+                            <span class="icon">📦</span>
+                            <div class="info">
+                                <span class="label">홈으로 이동</span>
+                                <span class="desc">홈화면으로 이동하기</span>
+                            </div>
+                        </button>
 
-            <button class="menu-card quest">
-              <span class="icon">⚽</span>
-              <div class="info">
-                <span class="label">PvP 대결</span>
-              </div>
-            </button>
+                        <button class="top-menu-card shop" @click="topSelectAndClose('shop')">
+                            <span class="icon">💎</span>
+                            <div class="info">
+                                <span class="label">스페셜 상점</span>
+                                <span class="desc">새로운 팩 뽑기</span>
+                            </div>
+                        </button>
 
-            <button class="menu-card quest">
-              <span class="icon">⚽</span>
-              <div class="info">
-                <span class="label">AI 대결</span>
-              </div>
-            </button>
-          </div>
+                        <button class="top-menu-card quest">
+                            <span class="icon">📜</span>
+                            <div class="info">
+                                <span class="label">퀘스트</span>
+                                <span class="desc">보상 수령하기</span>
+                            </div>
+                        </button>
 
-          <div class="menu-footer">
-            <button class="full-close-btn" @click="isTopMenuOpen = false">
-              닫기 <span class="arrow">▲</span>
-            </button>
-          </div>
-        </div>
-      </div>
+                        <button class="top-menu-card quest">
+                            <span class="icon">⚽</span>
+                            <div class="info">
+                                <span class="label">PvP 대결</span>
+                            </div>
+                        </button>
 
-      <div
-        v-if="isTopMenuOpen"
-        class="menu-overlay"
-        @click="isTopMenuOpen = false"
-      ></div>
-    </header>
+                        <button class="top-menu-card quest">
+                            <span class="icon">⚽</span>
+                            <div class="info">
+                                <span class="label">AI 대결</span>
+                            </div>
+                        </button>
+                    </div>
 
-    <main class="main-display">
-      <section v-if="currentView === 'field'" class="view-field">
-        <div class="spacer"></div>
-        <section class="field-area">
-          <div
-            v-if="isReadyToShowField"
-            :class="['field', 'f-' + formation.name]"
-          >
-            <TransitionGroup name="field-transition">
-              <div
-                v-for="(row, rowIndex) in formationRows"
-                :key="'row-' + rowIndex"
-                class="squad-row"
-              >
-                <div
-                  v-for="slot in row"
-                  :key="slot.slotKey"
-                  class="player-box"
-                  :class="[
-                    slot.pos.toLowerCase(), // 'st'
-                    `${slot.pos.toLowerCase()}-${slot.index}`, // 'st-0'
-                    { 'is-drag-over': dragOverSlotKey === slot.slotKey }, // 드래그 조건부 클래스
-                  ]"
-                  :draggable="!!squad[slot.slotKey]"
-                  @dragstart="onDragStart($event, slot.slotKey)"
-                  @dragover.prevent
-                  @dragenter="onDragEnter(slot.slotKey)"
-                  @dragleave="onDragLeave"
-                  @drop="onDrop(slot.slotKey)"
-                  @click="openGacha(slot.pos, slot.index)"
-                  @contextmenu="openPlayerDetail($event, squad[slot.slotKey])"
-                >
-                  <div v-if="squad[slot.slotKey]" class="player-card">
-                    <div
-                      class="team-dot"
-                      :style="{
-                        backgroundColor: squad[slot.slotKey].teamColor,
-                      }"
-                    ></div>
-                    <img
-                      :src="squad[slot.slotKey].image"
-                      class="p-img"
-                      @error="handleImageError"
-                      @dragstart.prevent
+                    <div v-else class="top-menu-group">
+                        <div class="impossibleMenu flex-center">로그인 후 이용이 가능합니다.</div>
+                        <button class="top-menu-card storage">
+                            <span class="icon">📦</span>
+                            <div class="info">
+                                <span class="label">홈으로 이동</span>
+                                <span class="desc">홈화면으로 이동하기</span>
+                            </div>
+                        </button>
+
+                        <button class="top-menu-card shop" @click="goToShop">
+                            <span class="icon">💎</span>
+                            <div class="info">
+                                <span class="label">스페셜 상점</span>
+                                <span class="desc">새로운 팩 뽑기</span>
+                            </div>
+                        </button>
+
+                        <button class="top-menu-card quest">
+                            <span class="icon">📜</span>
+                            <div class="info">
+                                <span class="label">퀘스트</span>
+                                <span class="desc">보상 수령하기</span>
+                            </div>
+                        </button>
+
+                        <button class="top-menu-card quest">
+                            <span class="icon">⚽</span>
+                            <div class="info">
+                                <span class="label">PvP 대결</span>
+                            </div>
+                        </button>
+
+                        <button class="top-menu-card quest">
+                            <span class="icon">⚽</span>
+                            <div class="info">
+                                <span class="label">AI 대결</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="top-menu-footer flex-center">
+                        <button class="full-close-btn" @click="isTopMenuOpen = false">
+                            닫기 <span class="arrow">▲</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="isTopMenuOpen" class="top-menuoverlay" @click="isTopMenuOpen = false"></div>
+        </header>
+
+        <main class="main-display flex-center">
+            <section v-if="currentView === 'field'" class="view-field">
+                <div class="save-btn-wrapper" v-if="!isSaved">
+                    <div class="tooltip-base">
+                        팀을 저장해야 선수들이<br />사라지지 않아요!
+                    </div>
+                    <button
+                        v-if="!isLoggedIn"
+                        class="floating-save-btn"
+                        @click="handleSaveClick"
+                        >
+                        <span class="icon">💾</span> 팀 저장하기
+                    </button>
+                </div>
+                <div class="spacer"></div>
+                <section class="field-area flex-center">
+                    <div v-if="isReadyToShowField" :class="['gacha-field flex-center', 'f-' + formation.name]">
+                        <TransitionGroup name="field-transition">
+                            <div v-for="(row, rowIndex) in formationRows" :key="'row-' + rowIndex" class="squad-row">
+                                <div
+                                    v-for="slot in row"
+                                    :key="slot.slotKey"
+                                    class="player-box"
+                                    :class="[
+                                        slot.pos.toLowerCase(),
+                                        `${slot.pos.toLowerCase()}-${slot.index}`,
+                                        { 'is-drag-over': dragOverSlotKey === slot.slotKey },
+                                    ]"
+                                    :draggable="!!squad[slot.slotKey]"
+                                    @dragstart="onDragStart($event, slot.slotKey)"
+                                    @dragover.prevent
+                                    @dragenter="onDragEnter(slot.slotKey)"
+                                    @dragleave="onDragLeave"
+                                    @drop="onDrop(slot.slotKey)"
+                                    @click="!squad[slot.slotKey] && openGacha(slot.pos, slot.index)"
+                                    @contextmenu.prevent="squad[slot.slotKey] && openPlayerDetail($event, squad[slot.slotKey])"
+                                >
+
+                                    <PlayerCard
+                                        v-if="squad[slot.slotKey]"
+                                        :name="squad[slot.slotKey].name"
+                                        :stat="squad[slot.slotKey].stat"
+                                        :image="squad[slot.slotKey].image"
+                                        :teamColor="squad[slot.slotKey].teamColor"
+                                        size="sm"
+                                        variant="field"
+                                        :showStat="true"
+                                        @imgError="handleImageError"
+                                    />
+
+                                    <span v-else class="pos-label">{{ slot.pos }}</span>
+                                </div>
+                            </div>
+                        </TransitionGroup>
+                    </div>
+
+                    <div v-else :class="['empty-state', 'f-' + formation.name]">
+                        <div class="gacha-field flex-center">
+                            <div v-for="(row, rowIndex) in formationRows" :key="'row-' + rowIndex" class="squad-row">
+                                <div v-for="slot in row" :key="slot.slotKey" class="player-slot fixed-mode" :class="[
+                                    slot.pos.toLowerCase(), // 'st'
+                                    `${slot.pos.toLowerCase()}-${slot.index}`, // 'st-0'
+                                    ]" @click="openGacha(slot.pos, slot.index)"
+                                    @contextmenu="openPlayerDetail($event, squad[slot.slotKey])">
+                                    <PlayerCard
+                                    v-if="squad[slot.slotKey]"
+                                    :name="squad[slot.slotKey].name"
+                                    :stat="squad[slot.slotKey].stat"
+                                    :image="squad[slot.slotKey].image"
+                                    :teamColor="squad[slot.slotKey].teamColor"
+                                    size="sm"
+                                    variant="field"
+                                    :clickable="false"
+                                    :contextable="true"
+                                    @context="openPlayerDetail($event, squad[slot.slotKey])"
+                                    @imgError="handleImageError"
+                                    />
+
+                                    <span v-else class="pos-label">{{ slot.pos }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <aside class="info-sidebar">
+                    <div class="info-card-container">
+                        <nav class="formation-selector">
+                            <div class="tooltip-base">
+                                팀을 저장하면 선수들이<br />사라지지 않아요!
+                            </div>
+                            <button class="ham-menu-group" @click="isMenuOpen = !isMenuOpen">
+                                <span>{{ formation.name }}</span>
+                                <i class="arrow-icon" :class="{ 'is-open': isMenuOpen }">▼</i>
+                            </button>
+
+                            <Transition name="slide-fade">
+                                <div v-if="isMenuOpen" class="dropdown-menu">
+                                    <button v-for="(slots, name) in formationPresets" :key="name"
+                                        :class="{ active: formation.name === name }" @click="selectAndClose(name)">
+                                        {{ name }}
+                                    </button>
+                                </div>
+                            </Transition>
+                        </nav>
+                        <div class="info-card highlight">
+                            <div class="card-label">평균 OVR</div>
+                            <div class="card-value">{{ averageOvr }}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="card-label">적용 팀컬러</div>
+                            <ul class="card-value team-color">
+                            <li class="">
+                                {{ teamColorInfo.name }}
+                                <span>{{ teamColorInfo.level }}단계</span>
+                            </li>
+                            <li class="ovr-buff">
+                                해당 선수 OVR +{{ teamColorInfo.buff }}
+                            </li>
+                            </ul>
+                        </div>
+
+                        <button v-if="isLoggedIn" class="change-btn btn-type-2" @click="openStorageModal">
+                            <span>선수 보관함</span>
+                        </button>
+
+                        <button v-if="isLoggedIn" class="save-btn btn-type-2" :class="{ 'is-saved': isSaved }" @click="handleSaveClick">
+                            <span>스쿼드 저장</span>
+                        </button>
+                    </div>
+                </aside>
+            </section>
+
+            <section v-if="currentView === 'shop'" class="shop-field">
+                <div class="shop-content">
+                    <div class="card-pack gold-pack">
+                        <div class="card-pack-inner">
+                            <div class="pack-container">
+                                <div class="pack-group">
+                                    <div class="pack-inner">
+                                        <div class="pack-header">PREMIUM</div>
+                                        <div class="pack-main-title">GOLD</div>
+                                        <div class="pack-sub-title">PLAYER PACK</div>
+                                        <div class="pack-deco">★ ★ ★ ★ ★</div>
+                                    </div>
+                                    <div class="pack-price">💰 1,000 G</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-pack-info">
+                            <div class="card-info-box">
+                                <p>골드 선수팩</p>
+                                <p class="card-price"><span>1000</span> G</p>
+                            </div>
+                            <button class="btn-type-2 card-buy-button">
+                            구매
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-pack silver-pack">
+                        <div class="card-pack-inner">
+                            <div class="pack-container">
+                                <div class="pack-group">
+                                    <div class="pack-inner">
+                                        <div class="pack-header">PREMIUM</div>
+                                        <div class="pack-main-title">SILVER</div>
+                                        <div class="pack-sub-title">PLAYER PACK</div>
+                                        <div class="pack-deco">★ ★ ★ ★ </div>
+                                    </div>
+                                    <div class="pack-price">💰 1,000 G</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-pack-info">
+                            <p>실버 선수팩</p>
+                            <p class="card-price"><span>500</span> G</p>
+                        </div>
+                    </div>
+                    <div class="card-pack bronze-pack">
+                        <div class="card-pack-inner">
+                            <div class="pack-container">
+                                <div class="pack-group">
+                                    <div class="pack-inner">
+                                        <div class="pack-header">PREMIUM</div>
+                                        <div class="pack-main-title">BRONZE</div>
+                                        <div class="pack-sub-title">PLAYER PACK</div>
+                                        <div class="pack-deco">★ ★ ★</div>
+                                    </div>
+                                    <div class="pack-price">💰 1,000 G</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-pack-info">
+                            <p>브론즈 선수팩</p>
+                            <p class="card-price"><span>200</span> G</p>
+                        </div>
+                    </div>
+                    <div class="card-pack normal-pack">
+                        <div class="card-pack-inner">
+                            <div class="pack-container">
+                                <div class="pack-group">
+                                    <div class="pack-inner">
+                                        <div class="pack-header">PREMIUM</div>
+                                        <div class="pack-main-title">NORMAL</div>
+                                        <div class="pack-sub-title">PLAYER PACK</div>
+                                        <div class="pack-deco">★  </div>
+                                    </div>
+                                    <div class="pack-price">💰 1,000 G</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-pack-info">
+                            <p>노멀 선수팩</p>
+                            <p class="card-price"><span>100</span> G</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <Transition name="fade">
+            <div v-if="isModalOpen" class="modal-overlay" @click.self="modalType !== 'auth' && closeModal()">
+
+                <!-- gacha -->
+                <div v-if="modalType === 'gacha'" class="modal-content">
+                    <h2 class="gacha-title">선수 카드를 1장 뽑아주세요.</h2>
+                    <div class="card-container">
+                        <PlayerCard
+                            v-for="p in gachaOptions"
+                            :key="p.id"
+                            :name="p.name"
+                            :image="p.image"
+                            :teamColor="p.teamColor"
+                            :stat="p.stat"
+                            :badges="[currentPos]"
+                            size="lg"
+                            variant="gacha"
+                            :clickable="true"
+                            :showStat="true"
+                            @click="selectPlayer(p)"
+                            @imgError="handleImageError"
+                        />
+                    </div>
+                </div>
+
+                <!-- auth -->
+                <div v-else-if="modalType === 'auth'" class="modal-content save-form-modal">
+                    <h2 class="modal-title"><span>GACHA MY PLAYER</span></h2>
+                    <div class="input-group">
+                        <input v-if="authMode === 'register'" v-model="saveData.nickname" type="text" placeholder="닉네임 (10자 이내)" maxlength="10" />
+                        <input v-model="saveData.id" type="text" placeholder="아이디 (영문+숫자 4자 이상)" />
+                        <input v-model="saveData.pw" type="password" placeholder="비밀번호 (6자 이상)" />
+                        <input v-if="authMode === 'register'" v-model="saveData.pwConfirm" type="password" placeholder="비밀번호 확인" />
+                    </div>
+
+                    <div class="modal-btns">
+                        <button class="confirm-btn" @click="authMode === 'login' ? handleLogin() : handleRegister()">
+                        {{ authMode === "login" ? "로그인" : "등록하기" }}
+                        </button>
+                        <button class="cancel-btn" @click="closeModal">닫기</button>
+                    </div>
+                </div>
+
+                <!-- detail -->
+                <div v-else-if="modalType === 'detail'" class="modal-content detail-mode">
+                <div>
+                    <PlayerCard
+                    :name="selectedPlayerForView?.name"
+                    :image="selectedPlayerForView?.image"
+                    :teamColor="selectedPlayerForView?.teamColor"
+                    :stat="selectedPlayerForView?.stat"
+                    :badges="[selectedPlayerForView?.mainPosition, selectedPlayerForView?.subPosition1, selectedPlayerForView?.subPosition2].filter(Boolean)"
+                    size="xl"
+                    variant="detail"
+                    :showStat="true"
+                    @imgError="handleImageError"
                     />
-                    <div class="p-info">
-                      <span class="p-name">{{ squad[slot.slotKey].name }}</span>
+
+
+                    <button class="cancel-btn" @click="closeModal">닫기</button>
                     </div>
-                  </div>
-                  <span v-else class="pos-label">{{ slot.pos }}</span>
                 </div>
-              </div>
-            </TransitionGroup>
-          </div>
 
-          <div v-else :class="['empty-state', 'f-' + formation.name]">
-            <TransitionGroup name="field-transition">
-              <div class="field">
-                <div
-                  v-for="(row, rowIndex) in formationRows"
-                  :key="'row-' + rowIndex"
-                  class="squad-row"
-                >
-                  <div
-                    v-for="slot in row"
-                    :key="slot.slotKey"
-                    class="player-slot fixed-mode"
-                    :class="[
-                      slot.pos.toLowerCase(), // 'st'
-                      `${slot.pos.toLowerCase()}-${slot.index}`, // 'st-0'
-                    ]"
-                    @click="openGacha(slot.pos, slot.index)"
-                    @contextmenu="openPlayerDetail($event, squad[slot.slotKey])"
-                  >
-                    <div v-if="squad[slot.slotKey]" class="player-card">
-                      <div
-                        class="team-dot"
-                        :style="{
-                          backgroundColor: squad[slot.slotKey].teamColor,
-                        }"
-                      ></div>
-                      <img
-                        :src="squad[slot.slotKey].image"
-                        class="p-img"
-                        @error="handleImageError"
-                      />
-                      <div class="p-info">
-                        <span class="p-name">{{
-                          squad[slot.slotKey].name
-                        }}</span>
-                      </div>
+                <!-- storage -->
+                
+
+                <div v-else-if="modalType === 'storage'" class="modal-content storage-mode">
+                    <div class="storage-content">
+                        <div class="player-grid">
+                            <div
+                                v-for="player in playerInventory"
+                                :key="player.id"
+                                class="storage-player-box"
+                            >
+                                <PlayerCard
+                                :name="player.name"
+                                :stat="player.stat"
+                                :image="player.image"
+                                :teamColor="player.teamColor"
+                                size="sm"
+                                variant="field"
+                                :clickable="false"
+                                :contextable="true"
+                                @context="openPlayerDetail($event, player)"
+                                @imgError="handleImageError"
+                                />
+                            </div>
+                        </div>
                     </div>
+                    <div class="storage-content">
 
-                    <span v-else class="pos-label">{{ slot.pos }}</span>
-                  </div>
+                        <div v-for="(players, category) in groupedInventory" :key="category" class="category-section">
+
+                            <h2 v-if="players.length > 0" class="category-title">
+                                {{ category }} <span class="count">{{ players.length }}</span>
+                            </h2>
+
+                            <div class="player-grid">
+                                <div v-for="player in players" :key="player.id" class="storage-player-box">
+                                    <PlayerCard
+                                        :name="player.name"
+                                        :stat="player.stat"
+                                        :image="player.image"
+                                        :teamColor="player.teamColor"
+                                        size="sm"
+                                        variant="field"
+                                        :clickable="false"
+                                        :contextable="true"
+                                        @context="openPlayerDetail($event, player)"
+                                        @imgError="handleImageError"
+                                    />
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <aside class="storage-sidebar">
+                    <button class="save-btn">
+                        <span>선수 방출</span>
+                    </button>
+                    <button class="save-btn">
+                        <span>선수 방출</span>
+                    </button>
+                    </aside>
                 </div>
-              </div>
-            </TransitionGroup>
-          </div>
-        </section>
-
-        <aside class="info-sidebar">
-          <div class="info-card-container">
-            <nav class="formation-selector">
-              <button class="menu-trigger" @click="isMenuOpen = !isMenuOpen">
-                <span>{{ formation.name }}</span>
-                <i class="arrow-icon" :class="{ 'is-open': isMenuOpen }">▼</i>
-              </button>
-
-              <Transition name="slide-fade">
-                <div v-if="isMenuOpen" class="dropdown-menu">
-                  <button
-                    v-for="(slots, name) in formationPresets"
-                    :key="name"
-                    :class="{ active: formation.name === name }"
-                    @click="selectAndClose(name)"
-                  >
-                    {{ name }}
-                  </button>
-                </div>
-              </Transition>
-            </nav>
-            <div class="info-card highlight">
-              <div class="card-label">평균 OVR</div>
-              <div class="card-value">{{ averageOvr }}</div>
             </div>
-            <div class="info-card">
-              <div class="card-label">적용 팀컬러</div>
-              <div class="card-value team-color">
-                {{ teamColorInfo.name }}
-                <span>{{ teamColorInfo.level }}단계</span>
-              </div>
-              <div class="card-value team-color">
-                해당 선수 OVR +{{ teamColorInfo.buff }}
-              </div>
-            </div>
+        </Transition>
 
-            <button
-              class="save-btn"
-              :class="{ 'is-saved': isSaved }"
-              @click="submitSave"
-            >
-              <span>현재 스쿼드 저장</span>
-            </button>
-          </div>
-        </aside>
-
-        <div class="save-btn-wrapper" v-if="!isSaved">
-          <div class="tooltip-base">
-            팀을 저장해야 선수들이<br />사라지지 않아요!
-          </div>
-          <button
-            v-if="!isLoggedIn"
-            class="floating-save-btn"
-            @click="submitSave"
-          >
-            <span class="icon">💾</span> 팀 저장하기
-          </button>
-        </div>
-      </section>
-
-      <section v-if="currentView === 'storage'" class="storage-field">
-        <div class="storage-header">
-          <button class="back-btn" @click="goToField">← BACK TO FIELD</button>
-          <h2>MY PLAYER STORAGE</h2>
-          <div class="storage-stats">
-            Total: {{ playerInventory?.length || 0 }}
-          </div>
-        </div>
-
-        <div class="storage-scroll-area">
-          <div v-for="pos in positionOrder" :key="pos" class="position-group">
-            <h3 class="pos-title">{{ pos }}</h3>
-
-            <div class="player-grid">
-              <div
-                v-for="player in groupedPlayers[pos]"
-                :key="player.id"
-                class="storage-card"
-              >
-                <div
-                  class="card-dot"
-                  :style="{ backgroundColor: getPosColor(player.pos) }"
-                ></div>
-
-                <div class="card-info">
-                  <div class="card-name">{{ player.name }}</div>
-                  <div class="card-pos-text">({{ player.pos }})</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <Transition name="fade">
-      <div
-        v-if="isModalOpen"
-        class="modal-overlay"
-        @click.self="isModalOpen = false"
-      >
-        <div class="modal-content">
-          <h2 class="gacha-title">선수 카드를 1장 뽑아주세요.</h2>
-          <div class="card-container">
-            <div
-              v-for="player in gachaOptions"
-              :key="player.id"
-              class="player-card gacha-card"
-              @click="selectPlayer(player)"
-            >
-              <div
-                class="team-dot"
-                :style="{ backgroundColor: player?.teamColor || '#ffffff' }"
-              ></div>
-              <img
-                :src="player?.image"
-                class="p-img"
-                @error="handleImageError"
-                @dragstart.prevent
-              />
-              <div class="p-info">
-                <span class="p-stat">{{ player?.stat }}</span>
-                <span class="p-name">{{ player?.name }}</span>
-                <span class="p-badge">{{ currentPos }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Transition>
-
-    <Transition name="fade">
-      <div v-if="isSaveModalOpen" class="modal-overlay">
-        <div class="modal-content save-form-modal">
-          <h2 class="modal-title"><span>GACHA MY PLAYER</span></h2>
-          <div class="input-group">
-            <input
-              v-if="authMode === 'register'"
-              v-model="saveData.nickname"
-              type="text"
-              placeholder="닉네임 (10자 이내)"
-              maxlength="10"
-            />
-            <input
-              v-model="saveData.id"
-              type="text"
-              placeholder="아이디 (영문+숫자 4자 이상)"
-            />
-            <input
-              v-model="saveData.pw"
-              type="password"
-              placeholder="비밀번호 (6자 이상)"
-            />
-            <input
-              v-if="authMode === 'register'"
-              v-model="saveData.pwConfirm"
-              type="password"
-              placeholder="비밀번호 확인"
-            />
-          </div>
-          <div class="modal-btns">
-            <button
-              class="confirm-btn"
-              @click="
-                authMode === 'login'
-                  ? handleLogin()
-                  : authMode === 'register'
-                    ? handleRegister()
-                    : submitSave()
-              "
-            >
-              {{
-                authMode === "login"
-                  ? "로그인"
-                  : authMode === "register"
-                    ? "등록하기"
-                    : "저장하기"
-              }}
-            </button>
-            <button class="cancel-btn" @click="isSaveModalOpen = false">
-              닫기
-            </button>
-          </div>
-          <div class="auth-switch">
-            <p v-if="authMode === 'login'">
-              계정이 없으신가요?
-              <span @click="authMode = 'register'">회원등록</span>
-            </p>
-            <p v-else-if="authMode === 'register'">
-              이미 계정이 있나요?
-              <span @click="authMode = 'login'">로그인</span>
-            </p>
-          </div>
-        </div>
-      </div>
-    </Transition>
-
-    <Transition name="fade">
-      <div
-        v-if="showDetailModal"
-        class="modal-overlay detail-mode"
-        @click.self="closeDetailModal"
-      >
-        <div class="player-card gacha-card">
-          <div
-            class="team-dot"
-            :style="{
-              backgroundColor: selectedPlayerForView?.teamColor || '#ffffff',
-            }"
-          ></div>
-          <img
-            :src="selectedPlayerForView?.image"
-            class="p-img"
-            @error="handleImageError"
-          />
-          <div class="p-info">
-            <span class="p-stat">{{ selectedPlayerForView?.stat }}</span>
-            <span class="p-name">{{ selectedPlayerForView?.name }}</span>
-            <div class="player-position-box">
-              <span class="p-badge p-main-position">{{
-                selectedPlayerForView?.mainPosition
-              }}</span>
-              <span
-                v-if="selectedPlayerForView?.subPosition1"
-                class="p-badge p-sub-position"
-              >
-                {{ selectedPlayerForView.subPosition1 }}
-              </span>
-              <span
-                v-if="selectedPlayerForView?.subPosition2"
-                class="p-badge p-sub-position"
-              >
-                {{ selectedPlayerForView.subPosition2 }}
-              </span>
-            </div>
-          </div>
-
-          <button class="close-btn" @click="closeDetailModal">닫기</button>
-        </div>
-      </div>
-    </Transition>
-  </div>
+    </div>
 </template>

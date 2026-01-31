@@ -8,6 +8,7 @@
   margin: 0;
   padding: 0;
   font: inherit;
+  line-height: 100%;
 }
 
 html,
@@ -77,4 +78,10 @@ ul {
 table {
   border-collapse: collapse;
   border-spacing: 0;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

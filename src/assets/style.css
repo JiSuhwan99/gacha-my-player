@@ -1,92 +1,189 @@
-@keyframes pop {
-  0% {
-    transform: scale(0.5);
-  }
-  100% {
-    transform: scale(1);
-  }
+/* ==========================================================================
+   GACHA MY PLAYER - cleaned & reorganized CSS (based on provided template)
+   - 구조(템플릿) 순서대로 재정렬
+   - 중복 제거(Transition, display 중복 등) + 공통 패턴 변수화
+   - 불필요/미사용 가능성이 큰 CSS는 보수적으로 정리(주석으로 표기)
+   ========================================================================== */
+
+/* -----------------------------
+   0) Design Tokens / Defaults
+--------------------------------*/
+:root {
+  --bg: #121213;
+  --bg-2: #0c0c0c;
+  --panel: rgba(255, 255, 255, 0.05);
+  --panel-2: rgba(0, 0, 0, 0.2);
+  --border: rgba(255, 255, 255, 0.1);
+  --border-2: rgba(255, 255, 255, 0.05);
+
+  --mint: #00ffcc;
+  --mint-2: #00ccaa;
+  --mint-3: #008877;
+  --badge-green: #065644;
+
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --muted-2: #888888;
+
+  --white: #f0f0f0;
+  --light-gray: #e0e0e0;
+  --gray: #cccccc;
+  --black: #0a0a0a;
+  --gold: #f9a825;
+  --yellow: #fdeb3b;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  --shadow-strong: 0 20px 40px rgba(0, 0, 0, 0.7);
+
+  --r-4: 4px;
+  --r-8: 8px;
+  --r-12: 12px;
+  --r-16: 16px;
+  --r-20: 20px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --font-bold: 800;
+  --font-semi-bold: 700;
+  --font-normal: 500;
+
+  --g-10: 10px;
 }
+
+/* -----------------------------
+   1) App Wrapper + Global
+--------------------------------*/
 .game-wrapper {
   min-height: 100vh;
-  background-color: #121213; /* 딥한 네이비/블랙 톤 */
+  background-color: var(--bg);
+  /* deep navy/black */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   padding: 30px;
-  color: #f8fafc;
+  color: var(--text);
 }
+
+/* -----------------------------
+   2) Toast
+--------------------------------*/
+.toast-message {
+  position: fixed;
+  bottom: 150px;
+  right: 20px;
+  background: rgba(10, 31, 26, 0.9);
+  border: 1px solid var(--mint);
+  color: var(--white);
+  border-radius: var(--r-8);
+  gap: var(--g-10);
+  font-weight: var(--font-bold);
+  padding: 15px;
+  z-index: 1000;
+  min-width: 150px;
+}
+
+.toast-icon {
+  color: var(--mint);
+  font-size: 1.1rem;
+}
+
+/* -----------------------------
+   3) Header / Auth
+--------------------------------*/
 header {
-  text-align: center;
   width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   position: relative;
 }
-/* 헤더 내부 로그인 배치 */
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+
+.header-title {
+  font-size: 2.5rem;
+  font-weight: var(--font-bold);
+  color: var(--mint);
+  text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+  margin-bottom: 10px;
 }
+
+.header-text {
+  text-align: center;
+}
+
 .auth-area {
   position: absolute;
   right: 0;
   top: 0;
   display: flex;
   flex-flow: row nowrap;
-  gap: 10px;
+  gap: var(--g-10);
   height: 100%;
 }
+
 .auth-area-box {
   display: flex;
   flex-flow: row nowrap;
   align-items: flex-start;
-  gap: 10px;
+  gap: var(--g-10);
   height: 100%;
 }
+
+/* Buttons */
+.btn-type-1 {
+  width: 100px;
+  max-height: 45px;
+  background: transparent;
+  border: 1px solid var(--mint);
+  color: var(--mint);
+  padding: 5px;
+  border-radius: var(--r-8);
+  font-size: 0.7rem;
+  font-weight: var(--font-semi-bold);
+  min-height: 40px;
+}
+
+/* 로그인 상태 */
 .user-logged-in {
   display: flex;
   flex-flow: column-reverse;
   justify-content: flex-start;
   align-items: flex-end;
-  gap: 10px;
+  gap: var(--g-10);
 }
+
 .user-info {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   position: absolute;
   bottom: 0;
   right: 0;
-}
-.menu-btn,
-.signup-btn,
-.login-btn,
-.logout-btn {
-  background: transparent;
-  border: 1px solid #00ffcc;
-  color: #00ffcc;
-  padding: 5px 15px;
-  border-radius: 4px;
-  cursor: pointer;
-  max-height: 45px;
+  border: 1px solid var(--mint);
+  border-radius: var(--r-4);
+  width: 210px;
+  padding: 5px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 30px;
 }
 
-/* 상단 메뉴 본체 */
+.user-points {
+  color: var(--gold);
+  font-weight: var(--font-semi-bold);
+}
+
+/* -----------------------------
+   4) Top Menu (Slide down)
+--------------------------------*/
 .top-menu {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  background: rgba(18, 18, 18, 0.95); /* 반투명 블랙 */
-  backdrop-filter: blur(10px); /* 배경 흐리게 */
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
   z-index: 2000;
   transform: translateY(-100%);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.4s var(--ease-out);
   border: 3px solid #333;
-  border-top: 0px;
+  border-top: 0;
   box-shadow: 0 50px 30px rgba(0, 0, 0, 0.2);
-  border-radius: 0px 0px 200px 200px;
+  border-radius: 0 0 200px 200px;
   overflow: hidden;
 }
 
@@ -94,671 +191,227 @@ header {
   transform: translateY(0);
 }
 
-/* 카드 그리드 레이아웃 */
-.menu-grid {
+.top-menu-container {
+  flex-flow: column;
+}
+
+/* 미로그인 시 메뉴 작동하지않게 가리는 부분 */
+.impossibleMenu {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: calc(100% - 50px);
+  background: rgba(0, 0, 0, 0.7);
+  font-size: 2rem;
+  z-index: 1500;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+}
+
+.top-menu-group {
   max-width: 1200px;
-  margin: 0 auto;
   display: flex;
   gap: 20px;
   padding: 20px;
 }
 
 /* 개별 메뉴 카드 */
-.menu-card {
+.top-menu-card {
   display: flex;
   align-items: center;
   padding: 20px;
   background: #252525;
   border: 1px solid #333;
-  border-radius: 12px;
+  border-radius: var(--r-8);
   cursor: pointer;
   transition: all 0.2s ease;
+  width: 20%;
 }
 
-.menu-card:hover {
+.top-menu-card:hover {
   background: #333;
-  border-color: #af8b4c;
-  transform: translateY(5px); /* 아래로 살짝 내려가는 느낌 */
+  border-color: var(--gold);
 }
 
-.menu-card .icon {
-  font-size: 2rem;
-  margin-right: 15px;
+.top-menu-card .icon {
+  font-size: 1.5rem;
 }
 
-.menu-card .info {
+.top-menu-card .info {
   display: flex;
   flex-direction: column;
   text-align: left;
 }
 
-.menu-card .label {
+.top-menu-card .label {
   font-size: 1.1rem;
-  font-weight: bold;
-  color: #fff;
+  font-weight: var(--font-bold);
+  color: var(--white);
 }
 
-.menu-card .desc {
+.top-menu-card .desc {
   font-size: 0.8rem;
-  color: #888;
-  margin-top: 4px;
+  color: var(--muted-2);
+  margin-top: 5px;
 }
 
 /* 하단 닫기 바 */
-.menu-footer {
+.top-menu-footer {
   width: 100%;
-  display: flex;
-  justify-content: center;
+  z-index: 2000;
 }
 
 .full-close-btn {
   width: 100%;
   padding: 15px;
-  background: #000;
-  border: none;
-  color: #aaa;
+  background: #191919;
   font-size: 0.9rem;
-  cursor: pointer;
-  transition: color 0.2s;
+  color: var(--gray);
 }
 
 .full-close-btn:hover {
-  color: #fff;
-  background: #080808;
+  color: var(--white);
+  background: #0f0f0f;
 }
 
 /* 배경 오버레이 */
-.menu-overlay {
+.top-menu-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
-  z-index: 1999;
-}
-.view-field {
-  display: flex;
+  z-index: 1900;
 }
 
-/* 저장 모달 내부 입력창 디자인 */
-.save-form-modal {
-  max-width: 400px;
-  background: #0a1f1a;
-  border-radius: 20px;
-  padding: 30px;
-}
-
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin: 25px 0;
-}
-
-.input-group input {
-  background: #f3f3f3;
-  padding: 12px;
-  color: #0a1f1a;
-  border-radius: 8px;
-  outline: none;
-}
-
-.input-group input:focus {
-  border-color: #00ffcc;
-}
-
-/* 저장하기 버튼 (꽉 찬 민트) */
-.confirm-btn {
-  flex: 1;
-  padding: 12px;
-  background: #00ffcc;
-  color: #000;
-  border: none;
-  border-radius: 8px;
-  font-weight: 900;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-/* 닫기 버튼 (테두리 스타일) */
-.cancel-btn {
-  flex: 1;
-  padding: 12px;
-  background: transparent;
-  color: #00ffcc;
-  border: 1px solid #00ffcc;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.title {
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: #00ffcc;
-  text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
-  line-height: 100%;
-  margin-bottom: 10px;
-}
-.subtitle {
-  line-height: 100%;
-}
+/* -----------------------------
+   5) Main Layout
+--------------------------------*/
 .main-display {
   width: 100%;
-  display: flex;
   flex-flow: row;
-  justify-content: center;
   position: relative;
   flex: 1;
+  display: flex;
+  flex-flow: column;
+  justify-content: flex-start;
+  align-items: center;
 }
+
+.view-field {
+  display: flex;
+  flex: 1;
+}
+
+/* 중앙 필드 */
 .field-area {
   width: 600px;
   height: auto;
-  border: 2px solid #fff;
-  border-radius: 10px;
+  border: 2px solid var(--white);
+  border-radius: var(--r-8);
   position: relative;
   margin-top: 30px;
-  background: #121213;
+  background: var(--bg);
   z-index: 100;
   padding: 30px;
-  display: flex;
-  flex-flow: column;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
   gap: 30px;
 }
+
+/* 좌측 빈 공간(정렬용) */
 .spacer {
-  width: 200px; /* (정보창 너비 300px + 간격 20px) 와 똑같이 설정 */
+  width: 200px;
   flex-shrink: 0;
   margin-top: 30px;
 }
+
+/* -----------------------------
+   6) Sidebar (Info)
+--------------------------------*/
+.info-card-container {
+  display: flex;
+  flex-flow: column;
+  gap: 10px;
+}
+
 .info-sidebar {
   width: 220px;
   margin-top: 30px;
-  background: rgba(255, 255, 255, 0.05); /* 반투명 배경 */
-  backdrop-filter: blur(10px); /* 유리 효과 */
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 14px;
-  color: #fff;
-  flex-shrink: 0;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  padding: 14px 14px 14px 44px;
+  background: var(--panel);
+  backdrop-filter: blur(10px);
+  border-radius: var(--r-8);
+  border: 1px solid var(--border);
+  padding: 15px 15px 15px 45px;
   margin-left: -30px;
+  color: var(--white);
+  flex-shrink: 0;
+  box-shadow: var(--shadow);
   z-index: 50;
-}
-
-.sidebar-header {
-  margin-bottom: 24px;
-}
-
-.sidebar-header .tag {
-  font-size: 10px;
-  background: #3b82f6; /* 포인트 컬러 */
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
-.sidebar-header h2 {
-  margin-top: 8px;
-  font-size: 20px;
-  font-weight: 700;
 }
 
 .info-card {
   background: rgba(0, 0, 0, 0.2);
-  border-radius: 12px;
-  padding: 14px;
-  margin-bottom: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--r-8);
+  padding: 15px;
+  border: 1px solid var(--border-2);
   transition: transform 0.2s;
 }
 
 .card-label {
-  font-size: 12px;
-  color: #94a3b8;
-  margin-bottom: 4px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 8px;
 }
 
 .card-value {
-  font-size: 24px;
-  font-weight: 800;
-  font-family: "Inter", sans-serif;
-  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: var(--font-bold);
+  color: var(--light-gray);
 }
 
-/* 평균 OVR 강조 스타일 */
+/* 평균 OVR 강조 */
 .info-card.highlight .card-value {
   color: #60a5fa;
   text-shadow: 0 0 15px rgba(96, 165, 250, 0.4);
 }
 
 .card-value.team-color {
-  font-size: 0.6rem;
-  color: #e2e8f0;
-}
-.card-value.team-color span {
-  background: #e2e8f0;
-  margin-left: 3px;
-  color: #121213;
-  padding: 2px;
-  border-radius: 5px;
-}
-.card-value.team-color:last-child {
-  font-weight: 500;
-  color: #a3ff97;
-}
-.formation-controls {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  justify-content: center;
-}
-
-.formation-controls button {
-  padding: 8px 15px;
-  background: #333;
-  color: white;
-  border: 1px solid #555;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.formation-controls button.active {
-  background: #ff9800; /* 주황색 (Team Tiger 컬러) */
-  border-color: #fff;
-  font-weight: bold;
-}
-.field {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: auto;
-  gap: 50px;
-}
-
-.squad-row {
-  display: flex;
-  justify-content: center;
-}
-.player-slot {
-  width: 100px;
-  height: 140px;
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px dashed rgba(255, 255, 255, 0.5);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.player-box {
-  width: 100px;
-  height: 140px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.pos-label {
-  font-weight: bold;
-  color: #fff;
-  font-size: 0.8rem;
-}
-/* 모달 레이아웃 */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.9);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
-}
-
-.modal-title {
-  color: #00ff88;
-  font-size: 2rem;
-  line-height: 100%;
-}
-
-.card-container {
-  display: flex;
-  gap: 50px;
-}
-
-/* [공통] 선수 카드 본체 */
-.player-card {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  /* 1. 광택이 느껴지는 민트 그라데이션 (상단 하이라이트 추가) */
-  background: linear-gradient(145deg, #00ffcc 0%, #00ccaa 50%, #008877 100%);
-  border: 3px solid #329590; /* 흰색 테두리로 민트색 대비 강조 */
-  border-radius: 8px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  /* 2. 더 강렬한 글로우 효과 */
-  box-shadow:
-    0 0 20px rgba(0, 255, 204, 0.1),
-    inset 0 0 15px rgba(255, 255, 255, 0.5); /* 안쪽 광택감 */
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-.team-dot {
-  position: absolute;
-  top: 5%;
-  left: 5%;
-  width: 20%;
-  height: auto;
-  aspect-ratio: 1/1;
-  border-radius: 50%;
-}
-/* 배경 이미지 처리 */
-.p-img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-  z-index: 1;
-  /* 이미지가 배경색과 자연스럽게 섞이도록 opacity 조절 가능 */
-  opacity: 0.9;
-  mask-image: linear-gradient(to bottom, black 65%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, black 65%, transparent 100%);
-}
-
-/* 하단 정보창 (유리 효과 + 검은색 텍스트 강조) */
-.p-info {
-  position: absolute;
-  z-index: 2;
-  /* 배경을 흰색 반투명으로 하여 검은 글자가 잘 보이게 설정 */
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
-  width: 100%;
-  height: 35%;
   display: flex;
   flex-flow: column;
-  justify-content: center;
-  align-items: center;
-  gap: 2px;
-  padding: 5px;
+  gap: 6px;
 }
 
-/* 선수 이름 (검은색 강조) */
-.p-name {
-  display: block;
-  font-size: 0.85rem; /* 크기를 키웠을 때를 대비해 약간 조정 */
-  font-weight: 900;
-  color: #d4d4d4;
-  line-height: 1.2;
-  text-shadow: 1px 1px 9px rgba(0, 0, 0, 0.5); /* 흰색 글자 가독성 보호 */
-  z-index: 3;
-}
-
-/* 능력치 숫자 (흰색 강조) */
-.p-stat {
-  display: block;
-  font-size: 1.2rem;
-  font-weight: 900;
-  color: #d4d4d4;
-  text-shadow: 1px 1px 9px rgba(0, 0, 0, 0.5); /* 흰색 글자 가독성 보호 */
-  letter-spacing: -0.5px;
-  line-height: 1;
-  z-index: 3;
-}
-
-/* [선택사항] 카드에 사선 광택 효과 추가 (가상 요소) */
-.player-card::after {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    45deg,
-    transparent 45%,
-    rgba(255, 255, 255, 0.3) 50%,
-    transparent 55%
-  );
-  transform: rotate(30deg);
-  pointer-events: none;
-  z-index: 4;
-}
-.player-slot:has(.player-card) {
-  border: none !important;
-  cursor: default;
-}
-
-/* 카드가 없는(빈) 슬롯에 마우스를 올렸을 때 */
-.player-slot:not(:has(.player-card)):hover {
-  border-color: #00ffcc;
-  /* 일렁이는 효과를 위한 애니메이션 */
-  animation: pulse-border 1.5s infinite ease-in-out;
-  cursor: pointer;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-/* 일렁이는 애니메이션 정의 */
-@keyframes pulse-border {
-  0% {
-    box-shadow: 0 0 0 0 rgba(0, 255, 204, 0.4);
-    border-color: #00ffcc;
-  }
-  50% {
-    box-shadow: 0 0 15px 5px rgba(0, 255, 204, 0.2);
-    border-color: #ffffff; /* 중간에 살짝 흰색으로 빛남 */
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(0, 255, 204, 0);
-    border-color: #00ffcc;
-  }
-}
-/* 일렁이는 애니메이션 정의 */
-@keyframes pulse-border2 {
-  0% {
-    box-shadow: 0 0 0 0px rgba(0, 255, 204, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 15px 5px rgba(0, 255, 204, 0.2);
-  }
-  100% {
-    box-shadow: 0 0 0 5px rgba(0, 255, 204, 0);
-  }
-}
-/* 모달 내 카드 크기 조절 */
-.gacha-card {
-  width: 200px; /* 필드보다 크게 */
-  height: 280px;
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* 호버 시 더 강력하게 번쩍이는 효과 */
-.gacha-card:hover {
-  transform: translateY(-20px) scale(1.1);
-  animation: pulse-border2 2s infinite ease-in-out;
-  z-index: 10;
-}
-
-/* 모달 카드용 폰트 크기 업그레이드 */
-.gacha-card .p-stat {
-  font-size: 2rem; /* 훨씬 크게 */
-}
-
-.gacha-card .p-name {
-  font-size: 1rem;
-}
-
-/* 포지션 뱃지 (선택 사항) */
-.p-badge {
-  font-size: 0.6rem;
-  background: #006357;
-  color: #f3f3f3;
-  padding: 2px 10px;
-  border-radius: 10px;
-  margin-top: 2px;
-}
-
-/* 모달 제목 스타일 */
-.gacha-title {
-  color: #fff;
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 40px;
-  text-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
-  text-align: center;
-}
-
-/* 토스트 본체 */
-.toast-message {
-  position: fixed;
-  bottom: 150px;
-  right: 20px;
-  z-index: 9999;
-  background: rgba(10, 31, 26, 0.9);
-  border: 1px solid #00ffcc;
-  color: #ffffff;
-  padding: 15px 25px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 700;
-  backdrop-filter: blur(10px);
-}
-
-.toast-icon {
-  color: #00ffcc;
-  font-size: 1.2rem;
-}
-
-/* 쓱 올라왔다가 사라지는 애니메이션 (Vue Transition) */
-.slide-fade-enter-active {
-  transition: all 0.2s ease-out;
-}
-
-.slide-fade-leave-active {
-  transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
-}
-
-.slide-fade-enter-from {
-  transform: translateX(30px);
-  opacity: 0;
-}
-
-.slide-fade-leave-to {
-  opacity: 0;
-}
-/* 1. 전체를 감싸는 컨테이너 (화면 우측 하단 고정) */
-.save-btn-wrapper {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  display: flex;
-  flex-direction: column;
-  align-items: center; /* 툴팁과 버튼을 가운데 정렬 */
-  z-index: 90;
-}
-
-/* 2. 툴팁 베이스 (말풍선 스타일링용) */
-.tooltip-base {
-  position: absolute;
-  bottom: 85px; /* 버튼 높이만큼 위로 띄움 */
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
-  transform: translateY(10px); /* 아래에서 위로 올라오는 효과 */
-  padding: 8px 15px;
-  border-radius: 20px;
-  background: #00bc97;
-  white-space: nowrap;
+.card-value.team-color li {
   font-size: 0.7rem;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  color: #000;
-  font-weight: 500;
+  color: var(--light-gray);
+  font-weight: var(--font-normal);
 }
 
-/* 말풍선 꼬리표 (필요시 추가) */
-.tooltip-base::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 6px;
-  border-style: solid;
-  border-color: #00bc97 transparent transparent transparent;
-}
-.modal-btns {
-  display: flex;
-  flex-flow: row nowrap;
-  gap: 10px;
-}
-.save-btn-wrapper:hover .tooltip-base {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
+.card-value.team-color li span {
+  background: var(--white);
+  color: var(--black);
+  padding: 1px 3px;
+  border-radius: var(--r-4);
 }
 
-.floating-save-btn {
-  width: 180px;
-  position: relative;
-  padding: 15px;
-  background: #00ffcc;
-  color: #000;
-  border: none;
-  border-radius: 50px;
-  font-weight: 700;
-  font-size: 1rem;
-  cursor: pointer;
-  box-shadow: 0 5px 20px rgba(0, 255, 204, 0.4);
-  transition: transform 0.2s;
-}
-.floating-save-btn:hover {
-  transform: scale(1.1);
-}
-.auth-switch {
-  margin-top: 20px;
-  text-align: center;
-  font-size: 0.85rem;
-  color: #ccc;
+.card-value.team-color li.ovr-buff {
+  color: var(--mint-2);
 }
 
-.auth-switch span {
-  color: #00ffcc;
-  cursor: pointer;
-  text-decoration: underline;
-  margin-left: 5px;
-  font-weight: bold;
-}
-
-.auth-switch span:hover {
-  color: #fff;
-}
+/* -----------------------------
+   7) Formation selector (Dropdown)
+--------------------------------*/
 .formation-selector {
-  position: relative; /* 드롭다운의 기준점 */
+  position: relative;
   width: 100%;
-  margin-bottom: 20px;
   font-size: 0.8rem;
 }
 
-.menu-trigger {
+.ham-menu-group {
   width: 100%;
-  padding: 10px 15px;
+  padding: 15px;
   background: rgba(0, 0, 0, 0.5);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  color: var(--white);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-8);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -769,6 +422,7 @@ header {
   transition: transform 0.3s ease;
   font-size: 0.8rem;
 }
+
 .arrow-icon.is-open {
   transform: rotate(180deg);
 }
@@ -778,163 +432,713 @@ header {
   top: calc(100% + 5px);
   left: 0;
   width: 100%;
-  background: #0c0c0c;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-8);
   overflow: hidden;
-  z-index: 100; /* 필드보다 위에 뜨도록 */
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  z-index: 100;
 }
 
 .dropdown-menu button {
   width: 100%;
-  padding: 12px;
-  background: none;
-  border: none;
-  color: #ccc;
+  padding: 10px;
+  color: var(--gray);
   text-align: left;
   cursor: pointer;
 }
 
 .dropdown-menu button:hover {
   background: #444;
-  color: white;
+  color: var(--white);
 }
 
 .dropdown-menu button.active {
-  color: #4CAF50; /* 유저님의 필드 색상과 맞춤 */
-  font-weight: bold;
+  color: #4CAF50;
+  font-weight: var(--font-semi-bold);
 }
 
-/* 애니메이션 */
-.slide-fade-enter-active, .slide-fade-leave-active {
-  transition: all 0.3s ease;
-}
-.slide-fade-enter-from, .slide-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-.save-btn {
+/* -----------------------------
+   8) Save button + Floating tooltip
+--------------------------------*/
+.btn-type-2 {
   width: 100%;
-  padding: 14px;
-  font-weight: bold;
-  color: white;
-  background-color: #2196f3; /* 기본 파란색 */
+  padding: 15px;
+  font-weight: var(--font-semi-bold);
+  color: var(--white);
+  background-color: #2196f3;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--r-8);
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
+.change-btn {
+  background: var(--gold);
+  color: var(--black);
+}
+
 .save-btn:hover {
   background-color: #1976d2;
 }
 
+.save-btn-wrapper {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 1100;
+}
+
+/* 툴팁 */
+.tooltip-base {
+  position: absolute;
+  bottom: 85px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  transform: translateY(10px);
+  padding: 10px 15px;
+  border-radius: 20px;
+  background: var(--white);
+  white-space: nowrap;
+  font-size: 0.7rem;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  color: var(--black);
+  font-size: 0.8rem;
+  font-weight: var(--font-normal);
+  text-align: center;
+  line-height: 130%;
+}
+
+.tooltip-base::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: var(--white) transparent transparent transparent;
+}
+
+.save-btn-wrapper:hover .tooltip-base {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.floating-save-btn {
+  width: 250px;
+  position: relative;
+  padding: 20px 15px;
+  background: var(--mint);
+  color: var(--black);
+  border: none;
+  border-radius: 50px;
+  font-weight: var(--font-semi-bold);
+  font-size: 1.3rem;
+  cursor: pointer;
+  box-shadow: 0 5px 20px rgba(0, 255, 204, 0.4);
+  transition: transform 0.2s;
+}
+
+.floating-save-btn:hover {
+  transform: scale(1.1);
+}
+
+/* -----------------------------
+   9) Field / Squad (Formation)
+--------------------------------*/
+.gacha-field {
+  flex-direction: column;
+  height: auto;
+  gap: 50px;
+}
+
+.squad-row {
+  display: flex;
+  justify-content: center;
+}
+
+/* 기본 슬롯(빈 슬롯) */
+.player-slot {
+  width: 100px;
+  height: 140px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  border-radius: var(--r-8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+/* 실제 클릭/드래그 대상 래퍼 */
+.player-box {
+  width: 100px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* 포지션 텍스트 */
+.pos-label {
+  font-weight: var(--font-semi-bold);
+  color: var(--white);
+  font-size: 0.8rem;
+}
+
+/* 카드가 박힌 슬롯은 점선 제거 */
+.player-slot:has(.player-card) {
+  border: none !important;
+  cursor: default;
+}
+
+/* 카드가 없는(빈) 슬롯 hover */
+.player-slot:not(:has(.player-card)):hover {
+  border-color: var(--mint);
+  animation: pulse-border 1.5s infinite ease-in-out;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* 드래그 커서 */
 .player-box[draggable="true"] {
   cursor: grab;
 }
+
 .player-box:active {
   cursor: grabbing;
   opacity: 0.3;
   transition: all 0.1s;
 }
+
 .p-img {
   -webkit-user-drag: none;
 }
+
+/* 드래그 오버 */
 .player-box.drag-over {
-  outline: 2px solid #ffeb3b;
+  outline: 2px solid var(--yellow);
   background-color: rgba(255, 235, 59, 0.1);
-  border-radius: 8px;
+  border-radius: var(--r-8);
 }
 
-/* 기존 가챠 모달보다 더 크게 강조 */
-.detail-mode .modal-content {
-  width: 500px; /* 기존보다 너비 확장 */
-  padding: 40px;
-  border: 2px solid gold; /* 특별한 느낌 */
-}
-
-.big-view {
-  transform: scale(1.5); /* 카드 자체를 키움 */
-  margin: 50px 0;
-}
-
-.big-img {
-  width: 200px !important; /* 이미지 크기 강제 확대 */
-}
-.p-extra-info {
-  margin-top: 10px;
-  font-size: 0.9rem;
-  color: #ccc;
-}
-.detail-mode .player-card {
-  width: 400px;
-  height: 560px;
-  pointer-events: none;
-}
-.detail-mode .player-card .p-info {
-}
-.detail-mode .player-card .p-name {
-  font-size: 2rem;
-}
-.detail-mode .player-card .p-stat {
-  font-size: 4rem;
-}
-.detail-mode .player-position-box {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-.detail-mode .p-badge {
-  background: #006357;
-  color: #f3f3f3;
-  padding: 4px 15px;
-  border-radius: 10px;
-  z-index: 3;
-  font-size: 1.2rem;
-}
-.field .player-slot,
-.field .player-box {
+/* 정렬 미세 조정 */
+.gacha-field .player-slot,
+.gacha-field .player-box {
   margin-right: 20px;
 }
 
 .empty-state .squad-row .player-slot:last-child,
-.field .squad-row .player-box:last-child {
-  margin-right: 0px;
+.gacha-field .squad-row .player-box:last-child {
+  margin-right: 0;
 }
-.empty-state.f-4-2-3-1 .field,
-.field.f-4-2-3-1 {
+
+/* 포메이션별 간격 */
+.empty-state.f-4-2-3-1 .gacha-field,
+.gacha-field.f-4-2-3-1 {
   gap: 20px;
 }
+
 .empty-state.f-4-2-3-1 .player-slot.dm-2,
 .empty-state.f-4-2-3-1 .player-slot.dm-4,
-.field.f-4-2-3-1 .player-box.dm-2,
-.field.f-4-2-3-1 .player-box.dm-4 {
+.gacha-field.f-4-2-3-1 .player-box.dm-2,
+.gacha-field.f-4-2-3-1 .player-box.dm-4 {
   margin-top: 90px;
 }
-.field.f-3-5-2 {
+
+.empty-state.f-3-5-2 .gacha-field,
+.gacha-field.f-3-5-2 {
   gap: 30px;
 }
+
 .empty-state.f-3-5-2 .player-slot.cm-3,
-.field.f-3-5-2 .player-box.cm-3 {
+.gacha-field.f-3-5-2 .player-box.cm-3 {
   margin-top: 60px;
 }
+
 .empty-state.f-3-5-2 .player-slot.lwb,
-.empty-state.f-3-5-2 .player-slot.rwb, 
-.field.f-3-5-2 .player-box.lwb,
-.field.f-3-5-2 .player-box.rwb {
+.empty-state.f-3-5-2 .player-slot.rwb,
+.gacha-field.f-3-5-2 .player-box.lwb,
+.gacha-field.f-3-5-2 .player-box.rwb {
   margin-top: -100px;
 }
+
 .empty-state.f-5-4-1 .player-slot.lwb,
 .empty-state.f-5-4-1 .player-slot.rwb,
 .empty-state.f-5-4-1 .player-slot.wm,
-.field.f-5-4-1 .player-box.lwb,
-.field.f-5-4-1 .player-box.rwb,
-.field.f-5-4-1 .player-box.wm {
+.gacha-field.f-5-4-1 .player-box.lwb,
+.gacha-field.f-5-4-1 .player-box.rwb,
+.gacha-field.f-5-4-1 .player-box.wm {
   margin-top: -100px;
 }
+
+/* -----------------------------
+   11) Modal: Gacha
+--------------------------------*/
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.gacha-title {
+  color: var(--white);
+  font-size: 1.5rem;
+  font-weight: var(--font-semi-bold);
+  margin-bottom: 40px;
+  text-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+  text-align: center;
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: var(--font-bold);
+  color: var(--mint);
+  text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+}
+
+.card-container {
+  display: flex;
+  gap: 50px;
+}
+
+/* -----------------------------
+   12) Modal: Auth / Save form
+--------------------------------*/
+.save-form-modal {
+  max-width: 400px;
+  background: #0a1f1a;
+  border: 3px solid var(--mint);
+  border-radius: var(--r-12);
+  padding: 40px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin: 30px 0;
+}
+
+.input-group input {
+  background: var(--white);
+  padding: 10px;
+  color: #0a1f1a;
+  border-radius: var(--r-8);
+  outline: none;
+  border: 1px solid transparent;
+}
+
+.input-group input:focus {
+  border-color: var(--mint);
+}
+
+.modal-btns {
+  display: flex;
+  flex-flow: row nowrap;
+  gap: var(--g-10);
+}
+
+/* 저장/로그인 확인 버튼 */
+.confirm-btn {
+  flex: 1;
+  padding: 10px;
+  background: var(--mint);
+  color: var(--black);
+  border: none;
+  border-radius: var(--r-8);
+  font-weight: var(--font-bold);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+/* 닫기 버튼 */
+.cancel-btn {
+  flex: 1;
+  padding: 10px;
+  background: transparent;
+  color: var(--mint);
+  border: 1px solid var(--mint);
+  border-radius: var(--r-8);
+  font-weight: var(--font-semi-bold);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.auth-switch {
+  margin-top: 15px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--gray);
+}
+
+.auth-switch span {
+  color: var(--mint);
+  cursor: pointer;
+  text-decoration: underline;
+  margin-left: 5px;
+  font-weight: var(--font-semi-bold);
+}
+
+.auth-switch span:hover {
+  color: var(--white);
+}
+
+/* -----------------------------
+   13) Modal: Detail mode
+--------------------------------*/
+
+
+/* -----------------------------
+   14) Modal: Storage
+--------------------------------*/
+.modal-content.storage-mode {
+  max-height: 90%;
+  max-width: 90%;
+  overflow-y: scroll;
+}
+
+.storage-field {
+  margin-top: 30px;
+  height: 100%;
+  gap: 30px;
+  align-items: flex-start;
+}
+
+.storage-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+
+  gap: 20px;
+  max-height: 100%;
+  overflow-y: auto;
+  width: 600px;
+}
+
+.category-section {
+  border: 2px solid var(--white);
+  border-radius: var(--r-8);
+  background: var(--bg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 228px;
+  background-color: var(--bg-2);
+}
+
+.category-title {
+  color: var(--white);
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  border-left: 4px solid var(--yellow);
+  padding-left: 10px;
+}
+
+.category-title .count {
+  font-size: 0.9rem;
+  color: #969696;
+  margin-left: 10px;
+}
+
+.player-grid {
+  display: flex;
+  flex-flow: row wrap;
+  gap: var(--g-10);
+}
+
+.storage-player-box {
+  width: 100px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.storage-sidebar {
+  border: 2px solid var(--white);
+  width: 200px;
+  padding: 30px;
+  background-color: var(--bg-2);
+  border-radius: var(--r-8);
+  display: flex;
+  flex-flow: column;
+  gap: 20px;
+}
+
+/* -----------------------------
+   15) Shop View
+--------------------------------*/
+.shop-field {
+  margin-top: 30px;
+  width: 600px;
+  background-color: var(--black);
+  height: 100%;
+}
+
+.shop-content {
+  width: 100%;
+  display: grid;
+  gap: 20px;
+  max-height: 100%;
+  overflow-y: auto;
+  border: 2px solid var(--white);
+  border-radius: var(--r-8);
+  background: var(--bg);
+  padding: 20px;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.card-pack {
+  border: 1px solid var(--white);
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--r-8);
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.card-pack-inner {
+  height: 70%;
+  width: 100%;
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.card-pack-info {
+  border-top: 1px solid var(--white);
+  background: rgba(255, 255, 255, 0.1);
+  height: 30%;
+  width: 100%;
+  padding: 10px;
+  display: flex;
+}
+
+.card-pack-info .card-info-box {
+  width: 70%;
+  height: 100%;
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.card-pack-info .card-buy-button {
+  width: 30%;
+  height: 100%;
+  padding: 5px;
+  background: var(--mint);
+  color: var(--bg-2);
+}
+
+.card-pack-info .card-price {
+  color: var(--yellow);
+  font-weight: var(--font-semi-bold);
+}
+
+.card-pack-info .card-price span {
+  color: var(--white)695;
+}
+
+.pack-container {
+  width: fit-content;
+  transform: rotate(45deg);
+}
+
+/* Gold card pack art */
+.pack-group {
+  width: 150px;
+  height: 220px;
+  background: linear-gradient(135deg, var(--yellow) 0%, #f9a825 50%, #f57f17 100%);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border: 5px solid #fff59d;
+  box-shadow: var(--shadow-strong), 0 0 20px rgba(252, 235, 59, 0.6);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pack-header {
+  font-size: 0.6rem;
+  font-weight: var(--font-bold);
+  color: #5d4037;
+  letter-spacing: 2px;
+}
+
+.pack-main-title {
+  font-size: 1.8rem;
+  font-weight: var(--font-bold);
+  color: var(--white);
+  text-shadow: 2px 4px 0 #bf360c;
+  margin-top: 10px;
+}
+
+.pack-sub-title {
+  font-size: 0.6rem;
+  font-weight: var(--font-semi-bold);
+  color: #3e2723;
+  margin-bottom: 10px;
+}
+
+.pack-deco {
+  font-size: 0.8rem;
+}
+
+.pack-price {
+  background: rgba(0, 0, 0, 0.7);
+  color: var(--yellow);
+  padding: 2px 5px;
+
+  border-radius: var(--r-8);
+  font-weight: var(--font-bold);
+  border: 1px solid var(--yellow);
+  font-size: 0.8rem;
+}
+
+.silver-pack .pack-group {
+  border: 5px solid #f7f7f7;
+  box-shadow: var(--shadow-strong), 0 0 20px rgba(231, 231, 231, 0.6);
+  background: linear-gradient(135deg, #adb1b1 0%, #e8e8e8 50%, #a3a3a3 100%);
+}
+
+.silver-pack .pack-header {
+  color: var(--black);
+}
+
+.silver-pack .pack-main-title {
+  text-shadow: 2px 4px 0 #545454;
+  font-size: 1.8rem;
+}
+
+.silver-pack .pack-deco {
+  font-size: 0.8rem;
+  color: var(--gold);
+}
+
+.silver-pack .pack-sub-title {
+  color: var(--black);
+}
+
+.silver-pack .pack-price {
+  background: rgba(0, 0, 0, 0.7);
+  color: var(--white);
+  border: 1px solid #878787;
+}
+
+.bronze-pack .pack-group {
+  border: 5px solid #b87333;
+  box-shadow: var(--shadow-strong), 0 0 20px rgba(184, 115, 51, 0.4);
+  background: linear-gradient(135deg, #804a19 0%, #e3a676 45%, #b87333 55%, #5e320a 100%);
+}
+
+.bronze-pack .pack-header {
+  color: #ffecd2;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.bronze-pack .pack-main-title {
+  color: #ffffff;
+  text-shadow: 2px 4px 0px #5e320a, 0 0 10px rgba(184, 115, 51, 0.5);
+  font-size: 1.6rem;
+}
+
+.bronze-pack .pack-deco {
+  font-size: 0.8rem;
+  color: rgba(30, 15, 5, 0.85);
+}
+
+.bronze-pack .pack-sub-title {
+  color: #f5decb;
+  font-weight: 500;
+}
+
+.bronze-pack .pack-price {
+  background: rgba(30, 15, 5, 0.85);
+  color: #ffb366;
+  border: 1px solid #b87333;
+}
+
+.normal-pack .pack-group {
+  border: 5px solid #00d2ff;
+  box-shadow: var(--shadow-strong), 0 0 20px rgba(0, 210, 255, 0.5);
+  background: linear-gradient(135deg, #001f3f 0%, #0074d9 50%, #001a33 100%);
+}
+
+.normal-pack .pack-header {
+  color: #00d2ff;
+  font-weight: 900;
+}
+
+.normal-pack .pack-main-title {
+  color: var(--white);
+  text-shadow: 0 0 10px rgba(0, 210, 255, 0.8), 2px 4px 0 #002b55;
+  font-size: 1.4rem;
+}
+
+.normal-pack .pack-deco {
+  font-size: 0.8rem;
+  color: #7fdbff;
+}
+
+.normal-pack .pack-sub-title {
+  color: var(--white);
+  opacity: 0.9;
+}
+
+.normal-pack .pack-price {
+  background: rgba(0, 10, 30, 0.8);
+  color: #00d2ff;
+  border: 1px solid #0074d9;
+}
+
+/* -----------------------------
+   16) Transitions (Vue)
+--------------------------------*/
+.slide-fade-enter-active {
+  transition: all 0.2s ease-out;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.2s var(--ease-out);
+}
+
+.slide-fade-enter-from {
+  transform: translateX(30px);
+  opacity: 0;
+}
+
+.slide-fade-leave-to {
+  opacity: 0;
+}
+
+/* field transition group */
 .field-transition-enter-from,
 .field-transition-leave-to {
   opacity: 0;
@@ -949,144 +1153,33 @@ header {
   transition: transform 0.5s ease;
 }
 
+/* -----------------------------
+   17) Animations
+--------------------------------*/
+@keyframes pulse-border {
+  0% {
+    box-shadow: 0 0 0 rgba(0, 255, 204, 0.0);
+  }
 
+  50% {
+    box-shadow: 0 0 12px rgba(0, 255, 204, 0.35);
+  }
 
-
-
-
-/*storage css*/
-/* 보관함 전체 배경 - 필드 배경과 통일 */
-.storage-field {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: #121212; /* 메인 배경색 */
-  z-index: 3000;
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-  box-sizing: border-box;
+  100% {
+    box-shadow: 0 0 0 rgba(0, 255, 204, 0.0);
+  }
 }
 
-/* 헤더: 뒤로가기 버튼과 요약 정보 */
-.storage-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0 20px 0;
-  border-bottom: 1px solid #333;
-  margin-bottom: 20px;
-}
+@keyframes pulse-border2 {
+  0% {
+    box-shadow: 0 0 0 rgba(0, 255, 204, 0.0);
+  }
 
-.back-btn {
-  background: #252525;
-  border: 1px solid #444;
-  color: #fff;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-}
+  50% {
+    box-shadow: 0 0 18px rgba(0, 255, 204, 0.45);
+  }
 
-.back-btn:hover {
-  background: #333;
-}
-
-/* 🏆 스크롤 영역 */
-.storage-scroll-area {
-  flex: 1;
-  overflow-y: auto;
-  padding-right: 10px;
-}
-
-/* 포지션 그룹 제목 - 이미지의 우측 패널 텍스트 스타일 참고 */
-.position-group {
-  margin-bottom: 40px;
-}
-
-.pos-title {
-  color: #4CAF50; /* 포인트 그린 */
-  font-size: 1.2rem;
-  margin-bottom: 15px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.pos-title::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #333;
-}
-
-/* 🎴 카드 그리드 - 이미지의 카드 디자인 복제 */
-.player-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 15px;
-}
-
-/* 이미지 속 민트색 카드 디자인 반영 */
-.storage-card {
-  aspect-ratio: 3 / 4;
-  background: linear-gradient(180deg, #42f2d1 0%, #2a9d8f 100%); /* 이미지 속 민트 그라데이션 */
-  border-radius: 8px;
-  position: relative;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.storage-card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 15px rgba(66, 242, 209, 0.5);
-}
-
-/* 카드 상단 포인트 점 (이미지의 오렌지/레드/블루 점) */
-.card-dot {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background-color: #ff9800; /* 포지션에 따라 동적 변경 가능 */
-}
-
-/* 카드 내부 선수 실루엣 아이콘 (필요시) */
-.card-avatar {
-  width: 60%;
-  opacity: 0.3;
-  margin-bottom: 10px;
-}
-
-/* 카드 하단 텍스트 정보 */
-.card-info {
-  background: rgba(0, 0, 0, 0.6); /* 텍스트 가독성을 위한 반투명 바 */
-  width: 100%;
-  padding: 5px 0;
-  border-radius: 4px;
-  text-align: center;
-}
-
-.card-name {
-  font-size: 0.8rem;
-  font-weight: bold;
-  color: #fff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.card-pos-text {
-  font-size: 0.65rem;
-  color: #ccc;
+  100% {
+    box-shadow: 0 0 0 rgba(0, 255, 204, 0.0);
+  }
 }
