@@ -1,17 +1,21 @@
 <script setup>
 import PlayerCard from './components/PlayerCard.vue'
+import SmallCheckModal from './components/SmallCheckModal.vue'
 import { useGacha } from "./composables/gacha.js";
 
 const {
-  squad,
+  squad,cardPacks,
+  VIEW_KEY,
   currentView,
   goToShop,
-  goToStorage,
   goToField,
   isTopMenuOpen,
   topSelectAndClose,
   isMenuOpen,
+  isReleaseModalOpen,
   selectAndClose,
+  sortType,
+  searchQuery,
 
   isLoggedIn,
   authMode,
@@ -53,10 +57,15 @@ const {
   saveTeamUpdate,
   saveTeamInitial,
   handleSaveClick,
-
+  
+  POSITION_GROUP_MAP, groupedByLine,
   playerInventory,
-  groupedInventory,
   fetchUserInventory,
+  filteredInventory,
+  groupedByPosition,
+  visibleCount,
+  releaseSelectedPlayers, canReleasePlayer, isInSquad,
+  selectedInventoryIds, toggleInventorySelect,
 
   showToast,
   toastMessage,
@@ -67,6 +76,22 @@ const {
   closeDetailModal,
   handleImageError,
   saveData,
+  
+  openReleaseModal, closeReleaseModal, confirmRelease,
+  selectedPlayers, togglePlayerSelect, clearInventorySelection,
+    buyPack,
+
+    isSmallCheckOpen,
+    smallCheckTitle,
+    smallCheckMessage,
+    smallCheckConfirmText,
+    smallCheckCancelText,
+    smallCheckDanger,
+    openSmallCheck,
+    closeSmallCheck,
+    handleSmallCheckConfirm,
+    handleSmallCheckCancel,
+    spendGoldTx, addGoldTx,
 } = useGacha();
 </script>
 
@@ -81,7 +106,7 @@ const {
         <header class="header">
             <div class="header-content flex-center">
                 <div class="header-text">
-                    <h1 class="header-title">GACHA MY PLAYER</h1>
+                    <h1 class="header-title" @click="goToField">GACHA MY PLAYER</h1>
                     <p class="header-sub-title">나만의 베스트 11을 완성하세요</p>
                 </div>
 
@@ -335,87 +360,44 @@ const {
 
             <section v-if="currentView === 'shop'" class="shop-field">
                 <div class="shop-content">
-                    <div class="card-pack gold-pack">
-                        <div class="card-pack-inner">
-                            <div class="pack-container">
-                                <div class="pack-group">
-                                    <div class="pack-inner">
-                                        <div class="pack-header">PREMIUM</div>
-                                        <div class="pack-main-title">GOLD</div>
-                                        <div class="pack-sub-title">PLAYER PACK</div>
-                                        <div class="pack-deco">★ ★ ★ ★ ★</div>
-                                    </div>
-                                    <div class="pack-price">💰 1,000 G</div>
-                                </div>
+                <div
+                    v-for="pack in cardPacks"
+                    :key="pack.id"
+                    class="card-pack"
+                    :class="pack.themeClass"
+                    >
+                    <div class="card-pack-inner">
+                        <div class="pack-container">
+                        <div class="pack-group">
+                            <div class="pack-inner">
+                            <div class="pack-header">PREMIUM</div>
+                            <div class="pack-main-title">{{ pack.grade }}</div>
+                            <div class="pack-sub-title">PLAYER PACK</div>
+                            <div class="pack-deco">
+                                {{ "★ ".repeat(pack.stars).trim() }}
                             </div>
+                            </div>
+                            <div class="pack-price">💰 {{ pack.price }} G</div>
                         </div>
-                        <div class="card-pack-info">
-                            <div class="card-info-box">
-                                <p>골드 선수팩</p>
-                                <p class="card-price"><span>1000</span> G</p>
-                            </div>
-                            <button class="btn-type-2 card-buy-button">
-                            구매
-                            </button>
                         </div>
                     </div>
-                    <div class="card-pack silver-pack">
-                        <div class="card-pack-inner">
-                            <div class="pack-container">
-                                <div class="pack-group">
-                                    <div class="pack-inner">
-                                        <div class="pack-header">PREMIUM</div>
-                                        <div class="pack-main-title">SILVER</div>
-                                        <div class="pack-sub-title">PLAYER PACK</div>
-                                        <div class="pack-deco">★ ★ ★ ★ </div>
-                                    </div>
-                                    <div class="pack-price">💰 1,000 G</div>
-                                </div>
-                            </div>
+
+                    <div class="card-pack-info">
+                        <div class="card-info-box">
+                        <p>{{ pack.title }}</p>
+                        <p class="card-price">
+                            <span>{{ pack.price }}</span> G
+                        </p>
                         </div>
-                        <div class="card-pack-info">
-                            <p>실버 선수팩</p>
-                            <p class="card-price"><span>500</span> G</p>
-                        </div>
+
+                        <button
+                        class="btn-type-2 card-buy-button"
+                        @click="buyPack(pack)"
+                        >
+                        구매
+                        </button>
                     </div>
-                    <div class="card-pack bronze-pack">
-                        <div class="card-pack-inner">
-                            <div class="pack-container">
-                                <div class="pack-group">
-                                    <div class="pack-inner">
-                                        <div class="pack-header">PREMIUM</div>
-                                        <div class="pack-main-title">BRONZE</div>
-                                        <div class="pack-sub-title">PLAYER PACK</div>
-                                        <div class="pack-deco">★ ★ ★</div>
-                                    </div>
-                                    <div class="pack-price">💰 1,000 G</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-pack-info">
-                            <p>브론즈 선수팩</p>
-                            <p class="card-price"><span>200</span> G</p>
-                        </div>
-                    </div>
-                    <div class="card-pack normal-pack">
-                        <div class="card-pack-inner">
-                            <div class="pack-container">
-                                <div class="pack-group">
-                                    <div class="pack-inner">
-                                        <div class="pack-header">PREMIUM</div>
-                                        <div class="pack-main-title">NORMAL</div>
-                                        <div class="pack-sub-title">PLAYER PACK</div>
-                                        <div class="pack-deco">★  </div>
-                                    </div>
-                                    <div class="pack-price">💰 1,000 G</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-pack-info">
-                            <p>노멀 선수팩</p>
-                            <p class="card-price"><span>100</span> G</p>
-                        </div>
-                    </div>
+                </div>
                 </div>
             </section>
         </main>
@@ -488,12 +470,61 @@ const {
 
                 <div v-else-if="modalType === 'storage'" class="modal-content storage-mode">
                     <div class="storage-content">
-                        <div class="player-grid">
+
+                        <div class="storage-toolbar">
+                            <div class="toolbar-left">
+                                <input
+                                type="text"
+                                class="storage-search"
+                                placeholder="선수 검색"
+                                v-model="searchQuery"
+                                />
+
+                                <select class="storage-sort" v-model="sortType">
+                                    <option value="recent">최근획득</option>
+                                    <option value="stat">능력치</option>
+                                    <option value="name">이름</option>
+                                    <option value="position">포지션</option>
+                                </select>
+                            </div>
+
+                            <div class="toolbar-right">
+                                <button class="tool-btn">잠금</button>
+                                <button
+                                class="tool-btn danger"
+                                :disabled="!selectedPlayers.length"
+                                @click="openReleaseModal"
+                                >
+                                방출
+                                </button>
+
+
+                                <button class="tool-btn primary">선수교체</button>
+                            </div>
+                        </div>
+
+                        <aside class="storage-sidebar">
+                            <strong>총 {{ visibleCount }}장 보유</strong>
+                        </aside>
+
+                        <div v-if="sortType !== 'position'" class="player-grid">
                             <div
-                                v-for="player in playerInventory"
+                                v-for="player in filteredInventory"
                                 :key="player.id"
                                 class="storage-player-box"
+                                :class="{ 'is-squad': isInSquad(player.id) }"
                             >
+                                <label>
+                                <input
+                                    type="checkbox"
+                                    :value="player.id"
+                                    :checked="selectedPlayers.includes(player.id)"
+                                    @change="togglePlayerSelect(player.id)"
+                                    :disabled="isInSquad(player.id)"
+                                />
+                                <span></span>
+                                </label>
+
                                 <PlayerCard
                                 :name="player.name"
                                 :stat="player.stat"
@@ -506,47 +537,90 @@ const {
                                 @context="openPlayerDetail($event, player)"
                                 @imgError="handleImageError"
                                 />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="storage-content">
 
-                        <div v-for="(players, category) in groupedInventory" :key="category" class="category-section">
-
-                            <h2 v-if="players.length > 0" class="category-title">
-                                {{ category }} <span class="count">{{ players.length }}</span>
-                            </h2>
-
-                            <div class="player-grid">
-                                <div v-for="player in players" :key="player.id" class="storage-player-box">
-                                    <PlayerCard
-                                        :name="player.name"
-                                        :stat="player.stat"
-                                        :image="player.image"
-                                        :teamColor="player.teamColor"
-                                        size="sm"
-                                        variant="field"
-                                        :clickable="false"
-                                        :contextable="true"
-                                        @context="openPlayerDetail($event, player)"
-                                        @imgError="handleImageError"
-                                    />
+                                <!-- ✅ 여기만 추가 -->
+                                <div v-if="isInSquad(player.id)" class="squad-badge flex-center">
+                                주전 선수
                                 </div>
                             </div>
-
                         </div>
+
+                        <!-- 포지션 정렬 -->
+                        <div v-else>
+                            <template
+                                v-for="(players, line) in groupedByLine"
+                                :key="line"
+                            >
+                                <div v-if="players && players.length" class="category-section">
+                                    <h2 class="category-title">
+                                        {{ line }}
+                                        <span class="count">{{ players.length }}</span>
+                                    </h2>
+
+                                    <div class="player-grid">
+                                        <div
+                                        v-for="player in players"
+                                        :key="player.id"
+                                        class="storage-player-box"
+                                        >
+                                        
+                                            <label>
+                                            <input
+                                                type="checkbox"
+                                                :value="player.id"
+                                                :checked="selectedPlayers.includes(player.id)"
+                                                @change="togglePlayerSelect(player.id)"
+                                            />
+                                            <span></span>
+                                            </label>
+
+                                            <PlayerCard
+                                                :name="player.name"
+                                                :stat="player.stat"
+                                                :image="player.image"
+                                                :teamColor="player.teamColor"
+                                                size="sm"
+                                                variant="field"
+                                                :clickable="false"
+                                                :contextable="true"
+                                                @context="openPlayerDetail($event, player)"
+                                                @imgError="handleImageError"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
                     </div>
-                    <aside class="storage-sidebar">
-                    <button class="save-btn">
-                        <span>선수 방출</span>
-                    </button>
-                    <button class="save-btn">
-                        <span>선수 방출</span>
-                    </button>
-                    </aside>
                 </div>
             </div>
         </Transition>
+        
+        <Transition name="fade">
+            <SmallCheckModal
+            v-if="isReleaseModalOpen"
+            @confirm="confirmRelease"
+            @cancel="closeReleaseModal"
+            >
+            선택한 선수를 방출하시겠습니까?
+            </SmallCheckModal>
+        </Transition>
+
+        <Transition name="fade">
+        <SmallCheckModal
+            v-if="isSmallCheckOpen"
+            :title="smallCheckTitle"
+            :confirm-text="smallCheckConfirmText"
+            :cancel-text="smallCheckCancelText"
+            :danger="smallCheckDanger"
+            @confirm="handleSmallCheckConfirm"
+            @cancel="handleSmallCheckCancel"
+        >
+            {{ smallCheckMessage }}
+        </SmallCheckModal>
+        </Transition>
+
 
     </div>
 </template>
