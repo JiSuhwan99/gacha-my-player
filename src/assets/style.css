@@ -805,13 +805,13 @@ header {
    14) Modal: Storage
 --------------------------------*/
 .modal-content.storage-mode {
-  height: 650px;
+  height: 755px;
   width: 90%;
   max-width: 985px;
   overflow-x: hidden;
   overflow-y: auto;
   background: var(--bg-2);
-  border-radius: var(--r-20);
+  border-radius: var(--r-8);
 }
 
 .storage-content {
@@ -923,6 +923,11 @@ header {
   z-index: 5;
 }
 
+.storage-player-box label.disabled span {
+  background: rgba(0, 0, 0, 0.2);
+  cursor: default;
+}
+
 .storage-player-box label input {
   display: none;
 }
@@ -975,6 +980,51 @@ header {
   pointer-events: none;
   font-size: 0.7rem;
   margin-top: 5px;
+}
+
+
+.modal-content.storage-mode.squad-manage-mode {
+  display: flex;
+  max-width: 70%;
+}
+
+.modal-content.storage-mode.squad-manage-mode .field-area {
+  margin-top: 0;
+  min-width: 600px;
+  padding: 20px;
+}
+
+.storage-info-sidebar {
+  height: 100px;
+}
+
+.modal-content.storage-mode.squad-manage-mode .info-card-container {
+  display: flex;
+  flex-flow: row;
+  height: 100%;
+}
+
+.modal-content.storage-mode.squad-manage-mode .info-card {
+  width: 32%;
+  flex: 1;
+  padding: 8px;
+}
+
+.storage-info-inner-box {
+  display: flex;
+  flex-flow: column;
+  gap: 10px;
+  width: 34%;
+
+}
+
+.squad-manage-mode .ham-menu-group,
+.squad-manage-mode .save-btn {
+  padding: 8px;
+}
+
+.squad-manage-mode .storage-content {
+  gap: 10px;
 }
 
 /* -----------------------------

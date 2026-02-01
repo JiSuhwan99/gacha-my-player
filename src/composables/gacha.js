@@ -1,8 +1,8 @@
 import { ref, onMounted, computed, watch } from "vue";
 import { auth, database } from "../firebase.js";
 import {
-  runTransaction, ref as dbRef, set,
-  get, onValue, update, remove, push
+  runTransaction, ref as dbRef, set, get, onValue,
+  update, remove
 } from "firebase/database";
 import {
   createUserWithEmailAndPassword,
@@ -44,12 +44,17 @@ export function useGacha() {
   const searchQuery = ref("");
   const sortType = ref("recent");
   const selectedPlayers = ref([]);
+  const isSquadManageMode = ref(false);
   const saveData = ref({
     id: "",
     nickname: "",
     pw: "",
     pwConfirm: "",
   });
+
+  const toggleMode = () => {
+    isSquadManageMode.value = !isSquadManageMode.value;
+  };
 
   const teamColors = {
     "Team Tiger": "team-tiger",
@@ -82,9 +87,9 @@ export function useGacha() {
     return squadCount.value > 11;
   });
 
-  const isInSquad = (playerId) => {
+  const isInSquad = (instanceId) => {
     return Object.values(squad.value).some(
-      (p) => p && p.id === playerId
+      (p) => p && p.instanceId === instanceId
     );
   };
 
@@ -195,6 +200,7 @@ export function useGacha() {
   };
 
   const closeModal = () => {
+    isSquadManageMode.value = false;
     isModalOpen.value = false;
     modalType.value = null;
   };
@@ -264,8 +270,13 @@ export function useGacha() {
       triggerToast("오류가 발생했습니다. 다시 시도해주세요.");
       return;
     }
+    const entity = makePlayerEntity(player);
 
-    squad.value[currentSlotKey.value] = makePlayerEntity(player);
+    // 2️⃣ 이 카드만의 절대 유일 ID 부여 (🔥 핵심)
+    entity.instanceId = crypto.randomUUID();
+
+    // 3️⃣ 스쿼드에 배치
+    squad.value[currentSlotKey.value] = entity;
 
     // 리롤 데이터 제거
     delete currentGachaResults.value[currentSlotKey.value];
@@ -417,24 +428,26 @@ export function useGacha() {
    *  Firebase: save/load
    --------------------------------*/
   const buildTeamPayload = () => {
-    const squadIdsOnly = {};
+    const squadInstanceMap = {};
     const inventoryData = {};
 
     Object.entries(squad.value).forEach(([slotKey, player]) => {
-      if (!player) return;
-      squadIdsOnly[slotKey] = player.id;
+      if (!player || !player.instanceId) return;
 
-      inventoryData[player.id] = {
-        id: player.id,
-        pos: player.mainPosition,
+      // 1️⃣ squad: 슬롯 → 카드(instanceId)
+      squadInstanceMap[slotKey] = player.instanceId;
+
+      // 2️⃣ inventory: 카드(instanceId) → 카드 데이터
+      inventoryData[player.instanceId] = {
+        id: player.id, // 선수 정의 id
+        pos: player.mainPosition || player.pos,
         locked: false,
         updatedAt: Date.now(),
       };
     });
 
     return {
-      squad: squadIdsOnly,
-      inventory: inventoryData,
+      squad: squadInstanceMap,
       formation: formation.value.name,
       teamUpdatedAt: Date.now(),
     };
@@ -503,6 +516,7 @@ export function useGacha() {
 
       const data = snapshot.val();
 
+      // 1️⃣ 포메이션 복원
       if (data.formation && formationPresets[data.formation]) {
         formation.value = {
           name: data.formation,
@@ -510,23 +524,38 @@ export function useGacha() {
         };
       }
 
-      if (data.squad) {
-        const allPlayers = getAllPlayersFlat();
-        const loadedSquad = {};
+      if (!data.squad || !data.inventory) return;
 
-        Object.entries(data.squad).forEach(([slotKey, playerId]) => {
-          const info = allPlayers.find((p) => String(p.id) === String(playerId));
-          if (!info) return;
-          loadedSquad[slotKey] = makePlayerEntity(info);
-        });
+      const allPlayers = getAllPlayersFlat();
+      const loadedSquad = {};
 
-        squad.value = loadedSquad;
-        isSaved.value = true;
-      }
+      // 2️⃣ squad: slotKey → instanceId
+      Object.entries(data.squad).forEach(([slotKey, instanceId]) => {
+        const card = data.inventory[instanceId];
+        if (!card) return;
+
+        // 3️⃣ 선수 정의 찾기
+        const baseInfo = allPlayers.find(
+          (p) => String(p.id) === String(card.id)
+        );
+        if (!baseInfo) return;
+
+        // 4️⃣ squad 카드 재조립 (🔥 instanceId 유지)
+        loadedSquad[slotKey] = {
+          ...makePlayerEntity(baseInfo),
+          instanceId,
+          mainPosition: card.pos || baseInfo.mainPosition,
+        };
+      });
+
+      squad.value = loadedSquad;
+      isSaved.value = true;
+      selectedPlayers.value = [];
     } catch (e) {
       console.error("로드 실패:", e);
     }
   };
+
 
   /** -----------------------------
    *  Firebase: inventory
@@ -547,19 +576,20 @@ export function useGacha() {
       }
 
       const inventoryMap = snapshot.val();
-      const idList = Object.keys(inventoryMap);
 
-      playerInventory.value = idList
-        .map((dbId) => {
-          const baseInfo = allPlayerData.find((p) => String(p.id) === String(dbId));
+      playerInventory.value = Object.entries(inventoryMap)
+        .map(([instanceId, card]) => {
+          const baseInfo = allPlayerData.find(
+            (p) => String(p.id) === String(card.id)
+          );
           if (!baseInfo) return null;
 
-          const dbDetail = inventoryMap[dbId];
           return {
             ...baseInfo,
-            displayPos: dbDetail.pos || baseInfo.pos,
-            locked: !!dbDetail.locked,
-            updatedAt: dbDetail.updatedAt,
+            instanceId,                      // 🔥 핵심
+            displayPos: card.pos || baseInfo.pos,
+            locked: !!card.locked,
+            updatedAt: card.updatedAt,
           };
         })
         .filter(Boolean);
@@ -567,6 +597,7 @@ export function useGacha() {
       console.error("🔥 로드 중 에러:", e);
     }
   };
+
 
   const groupedByPosition = computed(() => {
     return filteredInventory.value.reduce((acc, player) => {
@@ -673,6 +704,7 @@ export function useGacha() {
       squad.value = {};
       displayName.value = "";
       userGold.value = 0;
+      selectedPlayers.value = [];
       playerInventory.value = [];
       closeModal();
     } catch (e) {
@@ -738,7 +770,7 @@ export function useGacha() {
         await fetchUserInventory();
       }
       if (oldType === "storage" && newType !== "storage") {
-        clearInventorySelection();
+        selectedPlayers.value = [];
       }
     }
   );
@@ -820,146 +852,96 @@ export function useGacha() {
         .flat()
         .length;
     }
-
     // 일반 정렬 / 검색 상태
     return filteredInventory.value.length;
   });
-
-  const selectedInventoryIds = ref(new Set());
-
-  const togglePlayerSelect = (playerId) => {
-    const idx = selectedPlayers.value.indexOf(playerId);
+  const togglePlayerSelect = (instanceId) => {
+    const idx = selectedPlayers.value.indexOf(instanceId);
 
     if (idx === -1) {
-      selectedPlayers.value.push(playerId);
+      selectedPlayers.value.push(instanceId);
     } else {
       selectedPlayers.value.splice(idx, 1);
     }
+
+
+    console.log("selectedPlayers:", selectedPlayers.value);
   };
 
+  const pendingReleaseIds = ref([]);
 
-  const toggleInventorySelect = (player) => {
-    if (!player) return;
-
-    const id = player.id;
-    const set = selectedInventoryIds.value;
-
-    if (set.has(id)) {
-      set.delete(id);
-    } else {
-      set.add(id);
-    }
-
-    // Vue 반응성 보장
-    selectedInventoryIds.value = new Set(set);
-  };
-
-  const releaseSelectedPlayers = async () => {
-    const user = auth.currentUser;
-    if (!user) {
-      triggerToast("로그인이 필요합니다.");
-      return;
-    }
-
-    // 선택 없음
-    if (!selectedPlayers.value?.length) {
+  const releaseSelectedPlayers = () => {
+    if (!selectedPlayers.value.length) {
       triggerToast("방출할 선수를 선택해주세요.");
       return;
     }
 
-    // ✅ 스쿼드 포함 선수는 제외
-    const releasableIds = selectedPlayers.value.filter((id) => !isInSquad(id));
+    // instanceId 기준으로 주전 제외
+    const releasableIds = selectedPlayers.value.filter(
+      (instanceId) => !isInSquad(instanceId)
+    );
 
-    // 전부 스쿼드 선수만 선택한 경우
     if (!releasableIds.length) {
       triggerToast("주전 선수는 방출할 수 없습니다.");
-      closeReleaseModal();
       return;
     }
-
-    try {
-      // DB 삭제
-      await Promise.all(
-        releasableIds.map((id) =>
-          remove(dbRef(database, `users/${user.uid}/inventory/${id}`))
-        )
-      );
-
-      // 로컬 목록 갱신
-      playerInventory.value = playerInventory.value.filter(
-        (p) => !releasableIds.includes(p.id)
-      );
-
-      // 선택 초기화
-      selectedPlayers.value = [];
-
-      triggerToast(`${releasableIds.length}명 방출 완료`);
-      closeReleaseModal();
-    } catch (e) {
-      console.error("❌ 방출 실패:", e);
-      triggerToast("방출 중 오류가 발생했습니다.");
-      closeReleaseModal();
-    }
+    console.log(
+      "set pending:",
+      JSON.stringify(releasableIds)
+    );
+    pendingReleaseIds.value = releasableIds;
+    openReleaseModal();
   };
-
-
 
   const openReleaseModal = () => {
     isReleaseModalOpen.value = true;
   };
 
   const closeReleaseModal = () => {
+    selectedPlayers.value = [];
     isReleaseModalOpen.value = false;
-    clearSelectedPlayers();
   };
 
   const confirmRelease = async () => {
+
+
     const user = auth.currentUser;
     if (!user) return;
 
-    if (!selectedPlayers.value.length) {
-      triggerToast("방출할 선수를 선택해주세요.");
-      return;
-    }
-
-    // ✅ 방출 가능한 선수만 필터
-    const releasableIds = selectedPlayers.value.filter(
-      (id) => !isInSquad(id)
-    );
-
-    if (!releasableIds.length) {
-      triggerToast("주전 선수는 방출할 수 없습니다.");
-      clearSelectedPlayers();
+    if (!pendingReleaseIds.value.length) {
       closeReleaseModal();
       return;
     }
 
+    const ids = pendingReleaseIds.value;
+
     try {
+      // 1️⃣ Firebase 삭제
       await Promise.all(
-        releasableIds.map((id) =>
-          remove(dbRef(database, `users/${user.uid}/inventory/${id}`))
+        ids.map((instanceId) =>
+          remove(dbRef(database, `users/${user.uid}/inventory/${instanceId}`))
         )
       );
 
-      // 로컬 인벤토리 갱신
+      // 2️⃣ 로컬 inventory 갱신
       playerInventory.value = playerInventory.value.filter(
-        (p) => !releasableIds.includes(p.id)
+        (p) => !ids.includes(p.instanceId)
       );
 
-      triggerToast(`${releasableIds.length}명 방출 완료`);
-
-      closeReleaseModal();
+      triggerToast(`${ids.length}명 방출 완료`);
     } catch (e) {
-      console.error(e);
+      console.error("❌ 방출 실패:", e);
       triggerToast("방출 중 오류가 발생했습니다.");
     } finally {
-      clearSelectedPlayers();
+      // 3️⃣ 상태 정리
+      pendingReleaseIds.value = [];
+      selectedPlayers.value = [];
       closeReleaseModal();
     }
   };
 
+
   const clearInventorySelection = () => {
-    selectedInventoryIds.value = [];
   };
   const squadPlayerList = computed(() => {
     return Object.values(squad.value).filter(Boolean);
@@ -1149,6 +1131,7 @@ export function useGacha() {
       },
     });
   };
+
   const normalizeFilter = (v) => {
     if (!v || v === "all") return null;
     return Array.isArray(v) ? v : [v];
@@ -1191,26 +1174,22 @@ export function useGacha() {
   // ✅ 중복이면 count 증가 (현재 인벤 구조 유지)
   const addToInventory = async (player) => {
     const user = auth.currentUser;
-    if (!user || !player) return;
+    if (!user || !player || !player.instanceId) return;
 
-    const invRef = dbRef(database, `users/${user.uid}/inventory/${player.id}`);
-    const snap = await get(invRef);
+    const invRef = dbRef(
+      database,
+      `users/${user.uid}/inventory/${player.instanceId}`
+    );
 
-    if (!snap.exists()) {
-      await set(invRef, {
-        id: player.id,
-        pos: player.mainPosition || player.pos,
-        count: 1,
-        updatedAt: Date.now(),
-      });
-    } else {
-      const cur = snap.val();
-      await update(invRef, {
-        count: (cur.count ?? 1) + 1,
-        updatedAt: Date.now(),
-      });
-    }
+    await set(invRef, {
+      instanceId: player.instanceId,
+      id: player.id, // 선수 id
+      pos: player.mainPosition || player.pos,
+      locked: false,
+      updatedAt: Date.now(),
+    });
   };
+
 
   const purchaseAndDrawOne = async (pack) => {
     const user = auth.currentUser;
@@ -1236,10 +1215,13 @@ export function useGacha() {
 
       // ✅ 2. 선수 1장 생성
       const newPlayer = pickRandomPlayer(allPlayers, pack.drawConfig);
-
+      const instancePlayer = {
+        ...newPlayer,
+        instanceId: crypto.randomUUID(),
+      };
       try {
         // ✅ 3. 인벤토리 저장
-        await addToInventory(newPlayer);
+        await addToInventory(instancePlayer);
         await fetchUserInventory();
 
       } catch (invErr) {
@@ -1249,7 +1231,7 @@ export function useGacha() {
       }
 
       // ✅ 4. 결과 표시
-      selectedPlayerForView.value = newPlayer;
+      selectedPlayerForView.value = instancePlayer;
       openModal("detail");
       triggerToast(`${newPlayer.name} 영입!`);
 
@@ -1305,7 +1287,6 @@ export function useGacha() {
     POSITION_GROUP_MAP, groupedByLine,
     visibleCount, releaseSelectedPlayers, canReleasePlayer, isInSquad,
 
-    selectedInventoryIds, toggleInventorySelect,
 
     // ui
     showToast, toastMessage, triggerToast,
@@ -1314,6 +1295,7 @@ export function useGacha() {
     saveData,
     userGold,
 
+    pendingReleaseIds,
     openReleaseModal, closeReleaseModal, confirmRelease,
     isReleaseModalOpen, selectedPlayers, togglePlayerSelect,
     clearInventorySelection,
@@ -1330,6 +1312,7 @@ export function useGacha() {
     handleSmallCheckConfirm,
     handleSmallCheckCancel,
     spendGoldTx, addGoldTx,
+    isSquadManageMode,
   };
 
 }

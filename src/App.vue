@@ -77,6 +77,7 @@ const {
   handleImageError,
   saveData,
   
+  pendingReleaseIds,
   openReleaseModal, closeReleaseModal, confirmRelease,
   selectedPlayers, togglePlayerSelect, clearInventorySelection,
     buyPack,
@@ -92,6 +93,8 @@ const {
     handleSmallCheckConfirm,
     handleSmallCheckCancel,
     spendGoldTx, addGoldTx,
+    isSquadManageMode,
+    toggleMode,
 } = useGacha();
 </script>
 
@@ -239,7 +242,9 @@ const {
                         <span class="icon">💾</span> 팀 저장하기
                     </button>
                 </div>
-                <div class="spacer"></div>
+
+                <div class="spacer"">
+                </div>
                 <section class="field-area flex-center">
                     <div v-if="isReadyToShowField" :class="['gacha-field flex-center', 'f-' + formation.name]">
                         <TransitionGroup name="field-transition">
@@ -346,6 +351,8 @@ const {
                             </li>
                             </ul>
                         </div>
+
+                        <button @click="isSquadManageMode = !isSquadManageMode" class="change-btn btn-type-2">토글</button>
 
                         <button v-if="isLoggedIn" class="change-btn btn-type-2" @click="openStorageModal">
                             <span>선수 보관함</span>
@@ -468,7 +475,8 @@ const {
                 <!-- storage -->
                 
 
-                <div v-else-if="modalType === 'storage'" class="modal-content storage-mode">
+                <div v-else-if="modalType === 'storage'" class="modal-content storage-mode"
+                :class="{ 'squad-manage-mode': isSquadManageMode }">
                     <div class="storage-content">
 
                         <div class="storage-toolbar">
@@ -492,35 +500,89 @@ const {
                                 <button class="tool-btn">잠금</button>
                                 <button
                                 class="tool-btn danger"
-                                :disabled="!selectedPlayers.length"
-                                @click="openReleaseModal"
+                                @click="releaseSelectedPlayers"
                                 >
                                 방출
                                 </button>
 
 
-                                <button class="tool-btn primary">선수교체</button>
+                                <button
+                                class="tool-btn primary"
+                                @click="isSquadManageMode = true"
+                                >
+                                선수교체
+                                </button>
                             </div>
                         </div>
 
-                        <aside class="storage-sidebar">
+                        
+
+                        <aside v-if="isSquadManageMode" class="storage-info-sidebar">
+                            <div class="info-card-container">
+                                <div class="info-card highlight">
+                                    <div class="card-label">평균 OVR</div>
+                                    <div class="card-value">{{ averageOvr }}</div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="card-label">적용 팀컬러</div>
+                                    <ul class="card-value team-color">
+                                    <li class="">
+                                        {{ teamColorInfo.name }}
+                                        <span>{{ teamColorInfo.level }}단계</span>
+                                    </li>
+                                    <li class="ovr-buff">
+                                        해당 선수 OVR +{{ teamColorInfo.buff }}
+                                    </li>
+                                    </ul>
+                                </div>
+                                <div class="storage-info-inner-box">
+                                
+                                <nav class="formation-selector">
+                                    <div class="tooltip-base">
+                                        팀을 저장하면 선수들이<br />사라지지 않아요!
+                                    </div>
+                                    <button class="ham-menu-group" @click="isMenuOpen = !isMenuOpen">
+                                        <span>{{ formation.name }}</span>
+                                        <i class="arrow-icon" :class="{ 'is-open': isMenuOpen }">▼</i>
+                                    </button>
+
+                                    <Transition name="slide-fade">
+                                        <div v-if="isMenuOpen" class="dropdown-menu">
+                                            <button v-for="(slots, name) in formationPresets" :key="name"
+                                                :class="{ active: formation.name === name }" @click="selectAndClose(name)">
+                                                {{ name }}
+                                            </button>
+                                        </div>
+                                    </Transition>
+                                </nav>
+                                <button v-if="isLoggedIn" class="save-btn btn-type-2" :class="{ 'is-saved': isSaved }" @click="handleSaveClick">
+                                    <span>스쿼드 저장</span>
+                                </button>
+                                </div>
+                            </div>
+                        </aside>
+
+                        <aside class="storage-sidebar" >
                             <strong>총 {{ visibleCount }}장 보유</strong>
                         </aside>
 
+                        
+
                         <div v-if="sortType !== 'position'" class="player-grid">
                             <div
-                                v-for="player in filteredInventory"
-                                :key="player.id"
-                                class="storage-player-box"
-                                :class="{ 'is-squad': isInSquad(player.id) }"
+                            v-for="player in filteredInventory"
+                            :key="player.instanceId"
+                            class="storage-player-box"
+                            :class="{ 'is-squad': isInSquad(player.instanceId) }"
                             >
-                                <label>
+
+                                <label
+                                :class="{ disabled: isInSquad(player.instanceId) }">
                                 <input
-                                    type="checkbox"
-                                    :value="player.id"
-                                    :checked="selectedPlayers.includes(player.id)"
-                                    @change="togglePlayerSelect(player.id)"
-                                    :disabled="isInSquad(player.id)"
+                                type="checkbox"
+                                :checked="selectedPlayers.includes(player.instanceId)"
+                                @change="togglePlayerSelect(player.instanceId)"
+                                :disabled="isInSquad(player.instanceId)"
                                 />
                                 <span></span>
                                 </label>
@@ -538,8 +600,7 @@ const {
                                 @imgError="handleImageError"
                                 />
 
-                                <!-- ✅ 여기만 추가 -->
-                                <div v-if="isInSquad(player.id)" class="squad-badge flex-center">
+                                <div v-if="isInSquad(player.instanceId)" class="squad-badge flex-center">
                                 주전 선수
                                 </div>
                             </div>
@@ -547,51 +608,105 @@ const {
 
                         <!-- 포지션 정렬 -->
                         <div v-else>
-                            <template
-                                v-for="(players, line) in groupedByLine"
-                                :key="line"
+                            <div
+                            v-for="(players, line) in groupedByLine"
+                            :key="line"
                             >
-                                <div v-if="players && players.length" class="category-section">
-                                    <h2 class="category-title">
-                                        {{ line }}
-                                        <span class="count">{{ players.length }}</span>
-                                    </h2>
+                            <div
+                                v-if="players && players.length"
+                                class="category-section"
+                            >
+                                <h2 class="category-title">
+                                {{ line }}
+                                <span class="count">{{ players.length }}</span>
+                                </h2>
 
-                                    <div class="player-grid">
-                                        <div
-                                        v-for="player in players"
-                                        :key="player.id"
-                                        class="storage-player-box"
-                                        >
-                                        
-                                            <label>
-                                            <input
-                                                type="checkbox"
-                                                :value="player.id"
-                                                :checked="selectedPlayers.includes(player.id)"
-                                                @change="togglePlayerSelect(player.id)"
-                                            />
-                                            <span></span>
-                                            </label>
+                                <div class="player-grid">
+                                <div
+                                v-for="player in players"
+                                :key="player.instanceId"
+                                class="storage-player-box"
+                                :class="{ 'is-squad': isInSquad(player.instanceId) }"
+                                >
+                                    <label
+                                    :class="{ disabled: isInSquad(player.instanceId) }">
+                                    <input
+                                    type="checkbox"
+                                    :checked="selectedPlayers.includes(player.instanceId)"
+                                    @change="togglePlayerSelect(player.instanceId)"
+                                    :disabled="isInSquad(player.instanceId)"
+                                    />
+                                    <span></span>
+                                    </label>
 
-                                            <PlayerCard
-                                                :name="player.name"
-                                                :stat="player.stat"
-                                                :image="player.image"
-                                                :teamColor="player.teamColor"
-                                                size="sm"
-                                                variant="field"
-                                                :clickable="false"
-                                                :contextable="true"
-                                                @context="openPlayerDetail($event, player)"
-                                                @imgError="handleImageError"
-                                            />
-                                        </div>
+                                    <PlayerCard
+                                    :name="player.name"
+                                    :stat="player.stat"
+                                    :image="player.image"
+                                    :teamColor="player.teamColor"
+                                    size="sm"
+                                    variant="field"
+                                    :clickable="false"
+                                    :contextable="true"
+                                    @context="openPlayerDetail($event, player)"
+                                    @imgError="handleImageError"
+                                    />
+
+                                    <div
+                                    v-if="isInSquad(player.instanceId)"
+                                    class="squad-badge flex-center"
+                                    >
+                                    주전 선수
                                     </div>
                                 </div>
-                            </template>
+                                </div>
+                                </div>
+                            </div>
                         </div>
 
+                    </div>
+
+                    
+                    <div v-if="isSquadManageMode" class="field-area flex-center">
+                        <div v-if="isReadyToShowField" :class="['gacha-field flex-center', 'f-' + formation.name]">
+                            <TransitionGroup name="field-transition">
+                                <div v-for="(row, rowIndex) in formationRows" :key="'row-' + rowIndex" class="squad-row">
+                                    <div
+                                        v-for="slot in row"
+                                        :key="slot.slotKey"
+                                        class="player-box"
+                                        :class="[
+                                            slot.pos.toLowerCase(),
+                                            `${slot.pos.toLowerCase()}-${slot.index}`,
+                                            { 'is-drag-over': dragOverSlotKey === slot.slotKey },
+                                        ]"
+                                        :draggable="!!squad[slot.slotKey]"
+                                        @dragstart="onDragStart($event, slot.slotKey)"
+                                        @dragover.prevent
+                                        @dragenter="onDragEnter(slot.slotKey)"
+                                        @dragleave="onDragLeave"
+                                        @drop="onDrop(slot.slotKey)"
+                                        @click="!squad[slot.slotKey] && openGacha(slot.pos, slot.index)"
+                                        @contextmenu.prevent="squad[slot.slotKey] && openPlayerDetail($event, squad[slot.slotKey])"
+                                    >
+
+                                        <PlayerCard
+                                            v-if="squad[slot.slotKey]"
+                                            :name="squad[slot.slotKey].name"
+                                            :stat="squad[slot.slotKey].stat"
+                                            :image="squad[slot.slotKey].image"
+                                            :teamColor="squad[slot.slotKey].teamColor"
+                                            size="sm"
+                                            variant="field"
+                                            :showStat="true"
+                                            @imgError="handleImageError"
+                                        />
+
+                                        <span v-else class="pos-label">{{ slot.pos }}</span>
+                                    </div>
+                                </div>
+                            </TransitionGroup>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -604,6 +719,7 @@ const {
             @cancel="closeReleaseModal"
             >
             선택한 선수를 방출하시겠습니까?
+            <span>방출된 선수는 복구할 수 없습니다.</span>
             </SmallCheckModal>
         </Transition>
 
