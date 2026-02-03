@@ -2,7 +2,6 @@
 import PlayerCard from './components/PlayerCard.vue'
 import SmallCheckModal from './components/SmallCheckModal.vue'
 import { useGacha } from "./composables/gacha.js";
-
 const {
   squad,cardPacks,
   VIEW_KEY,
@@ -95,6 +94,8 @@ const {
     spendGoldTx, addGoldTx,
     isSquadManageMode,
     toggleMode,
+    confirmRerollOrSelect,
+    tryRerollFromField,
 } = useGacha();
 </script>
 
@@ -244,10 +245,17 @@ const {
                 </div>
 
                 <div class="spacer"">
+                  <ul>
+                    <li class="list-head">✅ 게임 이용 방법 ✅</li>
+                    <li>가운데 포지션 빈 칸을 클릭해 선수를 뽑아 나만의 스쿼드를 완성하는 게임입니다.</li>
+                    <li>11명을 모두 완성시킨 후, 우측 하단 버튼을 클릭해 내 팀을 등록해주세요.</li>
+                    <li>첫 번째 선수는 확정 ACE 등급 카드 입니다.</li>
+                    <li>총 3번의 선수 리롤이 가능합니다.</li>
+                    <li>추후 성장, 대전 컨텐츠가 업데이트 예정입니다.</li>
+                  </ul>
                 </div>
                 <section class="field-area flex-center">
                     <div v-if="isReadyToShowField" :class="['gacha-field flex-center', 'f-' + formation.name]">
-                        <TransitionGroup name="field-transition">
                             <div v-for="(row, rowIndex) in formationRows" :key="'row-' + rowIndex" class="squad-row">
                                 <div
                                     v-for="slot in row"
@@ -269,44 +277,46 @@ const {
                                 >
 
                                     <PlayerCard
-                                        v-if="squad[slot.slotKey]"
-                                        :name="squad[slot.slotKey].name"
-                                        :stat="squad[slot.slotKey].stat"
-                                        :image="squad[slot.slotKey].image"
-                                        :teamColor="squad[slot.slotKey].teamColor"
-                                        size="sm"
-                                        variant="field"
-                                        :showStat="true"
-                                        @imgError="handleImageError"
+                                      v-if="squad[slot.slotKey]"
+                                      :player="squad[slot.slotKey]"
+                                      size="sm"
+                                      variant="field"
+                                      clickable
+                                      @imgError="handleImageError"
                                     />
+
 
                                     <span v-else class="pos-label">{{ slot.pos }}</span>
                                 </div>
                             </div>
-                        </TransitionGroup>
                     </div>
 
                     <div v-else :class="['empty-state', 'f-' + formation.name]">
                         <div class="gacha-field flex-center">
                             <div v-for="(row, rowIndex) in formationRows" :key="'row-' + rowIndex" class="squad-row">
-                                <div v-for="slot in row" :key="slot.slotKey" class="player-slot fixed-mode" :class="[
+                                <div v-for="slot in row" :key="slot.slotKey"
+                                 class="player-slot fixed-mode" :class="[
                                     slot.pos.toLowerCase(), // 'st'
                                     `${slot.pos.toLowerCase()}-${slot.index}`, // 'st-0'
-                                    ]" @click="openGacha(slot.pos, slot.index)"
-                                    @contextmenu="openPlayerDetail($event, squad[slot.slotKey])">
+                                    ]" @click.left="
+                                          squad[slot.slotKey]
+                                            ? tryRerollFromField(slot.slotKey)
+                                            : openGacha(slot.pos, slot.index)
+                                        "
+                                    @contextmenu.prevent.stop="
+                                      openPlayerDetail($event, squad[slot.slotKey])
+                                    "
+                                    >
                                     <PlayerCard
-                                    v-if="squad[slot.slotKey]"
-                                    :name="squad[slot.slotKey].name"
-                                    :stat="squad[slot.slotKey].stat"
-                                    :image="squad[slot.slotKey].image"
-                                    :teamColor="squad[slot.slotKey].teamColor"
-                                    size="sm"
-                                    variant="field"
-                                    :clickable="false"
-                                    :contextable="true"
-                                    @context="openPlayerDetail($event, squad[slot.slotKey])"
-                                    @imgError="handleImageError"
+                                      v-if="squad[slot.slotKey]"
+                                      :player="squad[slot.slotKey]"
+                                      size="sm"
+                                      variant="field"
+                                      :clickable="false"
+                                      :contextable="false"
+                                      @imgError="handleImageError"
                                     />
+
 
                                     <span v-else class="pos-label">{{ slot.pos }}</span>
                                 </div>
@@ -351,8 +361,6 @@ const {
                             </li>
                             </ul>
                         </div>
-
-                        <button @click="isSquadManageMode = !isSquadManageMode" class="change-btn btn-type-2">토글</button>
 
                         <button v-if="isLoggedIn" class="change-btn btn-type-2" @click="openStorageModal">
                             <span>선수 보관함</span>
@@ -414,25 +422,23 @@ const {
 
                 <!-- gacha -->
                 <div v-if="modalType === 'gacha'" class="modal-content">
-                    <h2 class="gacha-title">선수 카드를 1장 뽑아주세요.</h2>
-                    <div class="card-container">
-                        <PlayerCard
-                            v-for="p in gachaOptions"
-                            :key="p.id"
-                            :name="p.name"
-                            :image="p.image"
-                            :teamColor="p.teamColor"
-                            :stat="p.stat"
-                            :badges="[currentPos]"
-                            size="lg"
-                            variant="gacha"
-                            :clickable="true"
-                            :showStat="true"
-                            @click="selectPlayer(p)"
-                            @imgError="handleImageError"
-                        />
-                    </div>
+                  <h2 class="gacha-title">선수 카드를 1장 뽑아주세요.</h2>
+
+                  <div class="card-container" ref="gachaCardContainer">
+                    <PlayerCard
+                      v-for="(p, i) in gachaOptions"
+                      :key="p.id"
+                      :player="p"
+                      size="lg"
+                      variant="gacha"
+                      clickable
+                      :appearDelay="i * 0.1"
+                      @click="selectPlayer(p)"
+                      @imgError="handleImageError"
+                    />
+                  </div>
                 </div>
+
 
                 <!-- auth -->
                 <div v-else-if="modalType === 'auth'" class="modal-content save-form-modal">
@@ -456,16 +462,13 @@ const {
                 <div v-else-if="modalType === 'detail'" class="modal-content detail-mode">
                 <div>
                     <PlayerCard
-                    :name="selectedPlayerForView?.name"
-                    :image="selectedPlayerForView?.image"
-                    :teamColor="selectedPlayerForView?.teamColor"
-                    :stat="selectedPlayerForView?.stat"
-                    :badges="[selectedPlayerForView?.mainPosition, selectedPlayerForView?.subPosition1, selectedPlayerForView?.subPosition2].filter(Boolean)"
-                    size="xl"
-                    variant="detail"
-                    :showStat="true"
-                    @imgError="handleImageError"
+                      v-if="selectedPlayerForView"
+                      :player="selectedPlayerForView"
+                      size="xl"
+                      variant="detail"
+                      @imgError="handleImageError"
                     />
+
 
 
                     <button class="cancel-btn" @click="closeModal">닫기</button>
@@ -476,7 +479,7 @@ const {
                 
 
                 <div v-else-if="modalType === 'storage'" class="modal-content storage-mode"
-                :class="{ 'squad-manage-mode': isSquadManageMode }">
+                  :class="{ 'squad-manage-mode': isSquadManageMode }">
                     <div class="storage-content">
 
                         <div class="storage-toolbar">
@@ -576,32 +579,32 @@ const {
                             :class="{ 'is-squad': isInSquad(player.instanceId) }"
                             >
 
-                                <label
-                                :class="{ disabled: isInSquad(player.instanceId) }">
-                                <input
-                                type="checkbox"
-                                :checked="selectedPlayers.includes(player.instanceId)"
-                                @change="togglePlayerSelect(player.instanceId)"
-                                :disabled="isInSquad(player.instanceId)"
-                                />
-                                <span></span>
-                                </label>
-
                                 <PlayerCard
-                                :name="player.name"
-                                :stat="player.stat"
-                                :image="player.image"
-                                :teamColor="player.teamColor"
-                                size="sm"
-                                variant="field"
-                                :clickable="false"
-                                :contextable="true"
-                                @context="openPlayerDetail($event, player)"
-                                @imgError="handleImageError"
+                                  :player="player"
+                                  size="sm"
+                                  variant="field"
+                                  :clickable="false"
+                                  :contextable="true"
+                                  @context="openPlayerDetail($event, player)"
                                 />
-
-                                <div v-if="isInSquad(player.instanceId)" class="squad-badge flex-center">
-                                주전 선수
+                                <div >
+                                
+                                  <div class="storage-label-box">
+                                    <label
+                                    :class="{ disabled: isInSquad(player.instanceId) }">
+                                    <input
+                                    type="checkbox"
+                                    :checked="selectedPlayers.includes(player.instanceId)"
+                                    @change="togglePlayerSelect(player.instanceId)"
+                                    :disabled="isInSquad(player.instanceId)"
+                                    />
+                                    <span></span>
+                                    </label>
+                                    
+                                    <!-- <div v-if="isInSquad(player.instanceId)" class="squad-badge flex-center">
+                                    주전 선수
+                                    </div> -->
+                                  </div>
                                 </div>
                             </div>
                         </div>
@@ -640,16 +643,12 @@ const {
                                     </label>
 
                                     <PlayerCard
-                                    :name="player.name"
-                                    :stat="player.stat"
-                                    :image="player.image"
-                                    :teamColor="player.teamColor"
-                                    size="sm"
-                                    variant="field"
-                                    :clickable="false"
-                                    :contextable="true"
-                                    @context="openPlayerDetail($event, player)"
-                                    @imgError="handleImageError"
+                                      :player="player"
+                                      size="sm"
+                                      variant="field"
+                                      :clickable="false"
+                                      :contextable="true"
+                                      @context="openPlayerDetail($event, player)"
                                     />
 
                                     <div
@@ -672,38 +671,35 @@ const {
                             <TransitionGroup name="field-transition">
                                 <div v-for="(row, rowIndex) in formationRows" :key="'row-' + rowIndex" class="squad-row">
                                     <div
-                                        v-for="slot in row"
-                                        :key="slot.slotKey"
-                                        class="player-box"
-                                        :class="[
-                                            slot.pos.toLowerCase(),
-                                            `${slot.pos.toLowerCase()}-${slot.index}`,
-                                            { 'is-drag-over': dragOverSlotKey === slot.slotKey },
-                                        ]"
-                                        :draggable="!!squad[slot.slotKey]"
-                                        @dragstart="onDragStart($event, slot.slotKey)"
-                                        @dragover.prevent
-                                        @dragenter="onDragEnter(slot.slotKey)"
-                                        @dragleave="onDragLeave"
-                                        @drop="onDrop(slot.slotKey)"
-                                        @click="!squad[slot.slotKey] && openGacha(slot.pos, slot.index)"
-                                        @contextmenu.prevent="squad[slot.slotKey] && openPlayerDetail($event, squad[slot.slotKey])"
-                                    >
+                                    v-for="slot in row"
+                                    :key="slot.slotKey"
+                                    class="player-box"
+                                    :class="[
+                                      slot.pos.toLowerCase(),
+                                      `${slot.pos.toLowerCase()}-${slot.index}`,
+                                      { 'is-drag-over': dragOverSlotKey === slot.slotKey },
+                                    ]"
+                                    :draggable="!!squad[slot.slotKey]"
+                                    @dragstart="onDragStart($event, slot.slotKey)"
+                                    @dragover.prevent
+                                    @dragenter="onDragEnter(slot.slotKey)"
+                                    @dragleave="onDragLeave"
+                                    @drop="onDrop(slot.slotKey)"
+                                    @click="!squad[slot.slotKey] && openGacha(slot.pos, slot.index)"
+                                    @contextmenu.prevent="squad[slot.slotKey] && openPlayerDetail($event, squad[slot.slotKey])"
+                                  >
+                                    <PlayerCard
+                                      v-if="squad[slot.slotKey]"
+                                      :player="squad[slot.slotKey]"
+                                      size="sm"
+                                      variant="field"
+                                      clickable
+                                      @imgError="handleImageError"
+                                    />
 
-                                        <PlayerCard
-                                            v-if="squad[slot.slotKey]"
-                                            :name="squad[slot.slotKey].name"
-                                            :stat="squad[slot.slotKey].stat"
-                                            :image="squad[slot.slotKey].image"
-                                            :teamColor="squad[slot.slotKey].teamColor"
-                                            size="sm"
-                                            variant="field"
-                                            :showStat="true"
-                                            @imgError="handleImageError"
-                                        />
+                                    <span v-else class="pos-label">{{ slot.pos }}</span>
+                                  </div>
 
-                                        <span v-else class="pos-label">{{ slot.pos }}</span>
-                                    </div>
                                 </div>
                             </TransitionGroup>
                         </div>

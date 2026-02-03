@@ -1,4 +1,4 @@
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, computed, watch } from 'vue';
 import { auth, database } from "../firebase.js";
 import {
   runTransaction, ref as dbRef, set, get, onValue,
@@ -45,6 +45,14 @@ export function useGacha() {
   const sortType = ref("recent");
   const selectedPlayers = ref([]);
   const isSquadManageMode = ref(false);
+
+  const rerollRemain = ref(3);
+  const MAX_REROLL = 3;
+  const ACE_GACHA_KEY = "ace_gacha_used";
+  const aceGachaUsed = ref(
+    localStorage.getItem(ACE_GACHA_KEY) === "1"
+  );
+
   const saveData = ref({
     id: "",
     nickname: "",
@@ -93,6 +101,7 @@ export function useGacha() {
     );
   };
 
+
   /** -----------------------------
    *  Utils
    --------------------------------*/
@@ -123,7 +132,7 @@ export function useGacha() {
   const makePlayerEntity = (player) => ({
     ...player,
     image: player.image || `/images/${player.id}.png`,
-    teamColor: teamColors[player.team],
+    teamColor: teamColors[player.team] ?? 'team-default',
   });
 
   const handleImageError = (e) => {
@@ -218,9 +227,14 @@ export function useGacha() {
   };
   const openPlayerDetail = (e, player) => {
     if (!player) return;
+
+    // 오른쪽 버튼만 허용 (2 = right button)
+    if (!e || e.button !== 2) return;
+
     selectedPlayerForView.value = player;
-    openModal("detail")
+    openModal("detail");
   };
+
   const openStorageModal = () => {
     authMode.value = "storage";
     openModal("storage");
@@ -229,20 +243,31 @@ export function useGacha() {
   /** -----------------------------
    *  Gacha
    --------------------------------*/
+
+  const isAceBlocked = (p) => {
+    if (!aceGachaUsed.value) return true; // 아직 허용
+    return p.grade?.toLowerCase() !== "ace"; // 사용 후엔 ace 차단
+  };
   const getPrioritizedPool = (pos, takenIds, allPlayers) => {
     const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
     const mainMatch = allPlayers.filter(
-      (p) => p.mainPosition === pos && !takenIds.includes(p.id)
+      (p) =>
+        !takenIds.includes(p.id) &&
+        isAceBlocked(p) &&
+        (
+          p.mainPosition === pos ||
+          p.subPosition1 === pos
+        )
     );
     return shuffle(mainMatch).slice(0, 3);
   };
-
-  // ✅ async로 변경: playerDb 로드 전에 눌러도 안전
   const openGacha = async (pos, i = "") => {
     await ensurePlayerDbLoaded();
 
     const slotKey = pos + i;
-    if (squad.value[slotKey]) return;
+
+    // ✅ 일반 가챠만 차단, 재선택이면 허용
+    if (squad.value[slotKey] && rerollTargetSlotKey.value !== slotKey) return;
 
     currentPos.value = pos;
     currentSlotKey.value = slotKey;
@@ -254,10 +279,21 @@ export function useGacha() {
       return;
     }
 
-    const takenIds = Object.values(squad.value).filter(Boolean).map((p) => p.id);
-    const allPlayers = getAllPlayersFlat();
+    const takenIds = Object.values(squad.value)
+      .filter(Boolean)
+      .map((p) => p.id);
 
-    const pool = getPrioritizedPool(pos, takenIds, allPlayers);
+    const allPlayers = getAllPlayersFlat();
+    const isAceBonusGacha = !aceGachaUsed.value;
+
+    const pool = isAceBonusGacha
+      ? getAceOnlyPool(pos, takenIds, allPlayers)
+      : getPrioritizedPool(pos, takenIds, allPlayers);
+    if (isAceBonusGacha) {
+      aceGachaUsed.value = true;
+      localStorage.setItem(ACE_GACHA_KEY, "0");
+      triggerToast("🎉 ACE 확정 가챠!");
+    }
     const results = pool.map((p) => makePlayerEntity(p));
 
     currentGachaResults.value[slotKey] = results;
@@ -265,25 +301,101 @@ export function useGacha() {
     openModal("gacha");
   };
 
-  const selectPlayer = (player) => {
-    if (!currentSlotKey.value) {
-      triggerToast("오류가 발생했습니다. 다시 시도해주세요.");
-      return;
+
+  const selectPlayer = async (player) => {
+    // 🔑 재선택 중이면 그 슬롯, 아니면 기존 currentSlotKey
+    const slotKey =
+      rerollTargetSlotKey.value || currentSlotKey.value;
+
+    if (!slotKey) return;
+
+    const instanceId = crypto.randomUUID();
+    const entity = {
+      ...makePlayerEntity(player),
+      instanceId,
+    };
+
+    // 🔁 [A] 재선택 모드 → 기존 선수 교체
+    if (rerollTargetSlotKey.value) {
+      squad.value[slotKey] = entity;
+
+      // 재선택 모드 종료
+      rerollTargetSlotKey.value = null;
     }
-    const entity = makePlayerEntity(player);
+    // 🆕 [B] 일반 가챠 → 그냥 배치
+    else {
+      squad.value[slotKey] = entity;
+    }
 
-    // 2️⃣ 이 카드만의 절대 유일 ID 부여 (🔥 핵심)
-    entity.instanceId = crypto.randomUUID();
+    // 2️⃣ inventory (DB)
+    await addToInventory(entity);
 
-    // 3️⃣ 스쿼드에 배치
-    squad.value[currentSlotKey.value] = entity;
+    // 3️⃣ inventory (로컬)
+    playerInventory.value.push({
+      ...entity,
+      displayPos: entity.mainPosition,
+      locked: false,
+      updatedAt: Date.now(),
+    });
 
-    // 리롤 데이터 제거
-    delete currentGachaResults.value[currentSlotKey.value];
+    // 가챠 결과 정리
+    delete currentGachaResults.value[slotKey];
 
     closeModal();
-    gachaOptions.value = [];
-    isSaved.value = false;
+  };
+
+
+  const rerollTargetSlotKey = ref(null);
+
+  const tryRerollFromField = (slotKey) => {
+    const player = squad.value[slotKey];
+    if (!player) return;
+
+
+    if (player.grade === "ace") {
+      triggerToast("ACE 카드는 재선택을 할 수 없어요.");
+      return;
+    }
+
+    if (rerollRemain.value <= 0) {
+      triggerToast("재선택 횟수를 모두 사용했어요.");
+      return;
+    }
+
+    openSmallCheck({
+      title: "선수 재선택",
+      message: `[${player.name} / ${player.stat}] 선수를 재선택 하시겠습니까?\n(남은 횟수: ${rerollRemain.value}회)`,
+      confirmText: "재선택",
+      cancelText: "취소",
+
+      onConfirm: async () => {
+        // ✅ 전역에서 차감
+        rerollRemain.value -= 1;
+
+        rerollTargetSlotKey.value = slotKey;
+
+        const pos = slotKey.replace(/[0-9]/g, "");
+        const index = Number(slotKey.replace(/[^0-9]/g, ""));
+
+        await openGacha(pos, index);
+      },
+    });
+  };
+  const getAceOnlyPool = (pos, takenIds, allPlayers) => {
+    const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
+
+    const aceMatch = allPlayers.filter(
+      (p) =>
+        p.grade === "ace" &&
+        !takenIds.includes(p.id) &&
+        (
+          p.mainPosition === pos ||
+          p.subPosition1 === pos ||
+          p.subPosition2 === pos
+        )
+    );
+
+    return shuffle(aceMatch).slice(0, 3);
   };
 
   /** -----------------------------
@@ -434,12 +546,10 @@ export function useGacha() {
     Object.entries(squad.value).forEach(([slotKey, player]) => {
       if (!player || !player.instanceId) return;
 
-      // 1️⃣ squad: 슬롯 → 카드(instanceId)
       squadInstanceMap[slotKey] = player.instanceId;
 
-      // 2️⃣ inventory: 카드(instanceId) → 카드 데이터
       inventoryData[player.instanceId] = {
-        id: player.id, // 선수 정의 id
+        id: player.id,
         pos: player.mainPosition || player.pos,
         locked: false,
         updatedAt: Date.now(),
@@ -448,13 +558,20 @@ export function useGacha() {
 
     return {
       squad: squadInstanceMap,
+      inventory: inventoryData, // 🔥 필수
       formation: formation.value.name,
       teamUpdatedAt: Date.now(),
     };
+
   };
+
 
   const persistTeamToDb = async ({ mode = "update", silent = false } = {}) => {
     const picked = Object.keys(squad.value || {}).length;
+
+    console.log("🧪 persistTeamToDb called");
+    console.log("🧪 picked:", picked);
+    console.log("🧪 squad:", squad.value);
 
     // 팀 저장은 11명 필수 (너 규칙 유지)
     if (picked < 11) {
@@ -524,23 +641,29 @@ export function useGacha() {
         };
       }
 
-      if (!data.squad || !data.inventory) return;
+      // 🔥 squad는 필수
+      if (!data.squad) {
+        squad.value = {};
+        isSaved.value = false;
+        return;
+      }
+
+      // 🔥 inventory는 선택 (없으면 빈 객체)
+      const inventory = data.inventory || {};
 
       const allPlayers = getAllPlayersFlat();
       const loadedSquad = {};
 
       // 2️⃣ squad: slotKey → instanceId
       Object.entries(data.squad).forEach(([slotKey, instanceId]) => {
-        const card = data.inventory[instanceId];
-        if (!card) return;
+        const card = inventory[instanceId];
+        if (!card) return; // inventory에 없으면 skip (하지만 전체 return ❌)
 
-        // 3️⃣ 선수 정의 찾기
         const baseInfo = allPlayers.find(
           (p) => String(p.id) === String(card.id)
         );
         if (!baseInfo) return;
 
-        // 4️⃣ squad 카드 재조립 (🔥 instanceId 유지)
         loadedSquad[slotKey] = {
           ...makePlayerEntity(baseInfo),
           instanceId,
@@ -551,6 +674,7 @@ export function useGacha() {
       squad.value = loadedSquad;
       isSaved.value = true;
       selectedPlayers.value = [];
+
     } catch (e) {
       console.error("로드 실패:", e);
     }
@@ -750,16 +874,17 @@ export function useGacha() {
         squad.value = {};
         userGold.value = 0;
         playerInventory.value = [];
+        localStorage.removeItem("ace_gacha_used");
         return;
       }
 
       isLoggedIn.value = true;
       closeModal();
-      isReadyToShowField.value = true;
       displayName.value = user.displayName || "";
 
       watchUserGold(user.uid);
       await loadUserSquad(user.uid);
+      isReadyToShowField.value = true;
     });
   });
 
@@ -864,8 +989,6 @@ export function useGacha() {
       selectedPlayers.value.splice(idx, 1);
     }
 
-
-    console.log("selectedPlayers:", selectedPlayers.value);
   };
 
   const pendingReleaseIds = ref([]);
@@ -1146,6 +1269,8 @@ export function useGacha() {
 
     // ✅ 1. 실제 DB stat 기준으로 필터링
     let pool = allPlayers.filter((p) => {
+      if (!isAceBlocked(p)) return false;
+
       const baseStat = Number(p.stat); // playerDb.json에 있는 실제 스탯
       if (Number.isNaN(baseStat)) return false;
 
@@ -1171,7 +1296,6 @@ export function useGacha() {
     return makePlayerEntity(picked);
   };
 
-  // ✅ 중복이면 count 증가 (현재 인벤 구조 유지)
   const addToInventory = async (player) => {
     const user = auth.currentUser;
     if (!user || !player || !player.instanceId) return;
@@ -1313,6 +1437,6 @@ export function useGacha() {
     handleSmallCheckCancel,
     spendGoldTx, addGoldTx,
     isSquadManageMode,
+    tryRerollFromField,
   };
-
 }

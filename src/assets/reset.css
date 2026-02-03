@@ -9,6 +9,8 @@
   padding: 0;
   font: inherit;
   line-height: 100%;
+  font-family:
+    "Pretendard Variable", sans-serif;
 }
 
 html,
@@ -23,19 +25,6 @@ body {
 body {
   line-height: 1.5;
   /* 시스템 폰트 사용 (한글 최적화) */
-  font-family:
-    "Pretendard Variable",
-    Pretendard,
-    -apple-system,
-    BlinkMacSystemFont,
-    system-ui,
-    Roboto,
-    "Helvetica Neue",
-    "Segoe UI",
-    "Apple SD Gothic Neo",
-    "Noto Sans KR",
-    "Malgun Gothic",
-    sans-serif;
 }
 
 img,

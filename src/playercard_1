@@ -1,0 +1,387 @@
+<template>
+    <div class="kinetic-stage" :style="dynamicSize">
+        <div class="card-scene" @mousemove="onMove" @mouseleave="onReset">
+            <div class="energy-card" ref="cardRef">
+
+                <div class="plasma-bg"></div>
+                <div class="crystal-overlay"></div>
+                <div class="energy-halo" ref="haloRef"></div>
+
+                <div class="card-inner">
+                    <div class="header-section">
+                        <div class="ovr-block">
+                            <span class="ovr-rating">{{ player.rating }}</span>
+                            <span class="ovr-label">POW</span>
+                        </div>
+                        <div class="pos-badge">{{ player.position }}</div>
+                    </div>
+
+                    <div class="portrait-area">
+                        <div class="core-frame">
+                            <div class="frame-pulse"></div>
+                            <img :src="player.img" class="player-photo" />
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h1 class="player-name">{{ player.name }}</h1>
+                        <div class="energy-divider"></div>
+                        <p class="player-club">{{ player.club }}</p>
+                    </div>
+
+                    <div class="stats-footer" v-if="size !== 'xs' && size !== 's'">
+                        <div class="stat-unit">
+                            <span class="s-label">PWR_ATK</span>
+                            <span class="s-val">{{ player.subStat1 }}</span>
+                        </div>
+                        <div class="stat-sep"></div>
+                        <div class="stat-unit">
+                            <span class="s-label">SPD_RUN</span>
+                            <span class="s-val">{{ player.subStat2 }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="specular-glare" ref="glareRef"></div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script setup>
+    import { ref, computed } from 'vue';
+    import { gsap } from 'gsap';
+
+    const props = defineProps({
+        size: { type: String, default: 'l' }
+    });
+
+    const cardRef = ref(null);
+
+    const player = {
+        rating: 91,
+        name: "SON HEUNG MIN",
+        club: "TOTTENHAM HOTSPUR",
+        position: "FW",
+        subStat1: "88",
+        subStat2: "92",
+        img: "https://sellev-bucket.s3.ap-northeast-2.amazonaws.com/test/son.png"
+    };
+
+    const widthMap = { xl: 380, l: 320, m: 240, s: 180, xs: 120 };
+    const dynamicSize = computed(() => {
+        const w = widthMap[props.size];
+        return { width: `${w}px`, fontSize: `${w / 20}px` };
+    });
+    const glareRef = ref(null);
+    const haloRef = ref(null); // 에너지 후광
+
+    const onMove = (e) => {
+        const { clientX, clientY } = e;
+        const { left, top, width, height } = cardRef.value.getBoundingClientRect();
+        const x = (clientX - left) / width - 0.5;
+        const y = (clientY - top) / height - 0.5;
+
+        gsap.to(cardRef.value, {
+            rotationY: x * 30,
+            rotationX: -y * 30,
+            scale: 1.05,
+            duration: 0.3,
+            ease: "power2.out"
+        });
+
+        gsap.to(glareRef.value, {
+            opacity: 0.8,
+            background: `radial-gradient(circle at ${clientX - left}px ${clientY - top}px, rgba(255,255,255,0.8) 0%, transparent 70%)`,
+            duration: 0.1
+        });
+
+        // 에너지 후광도 마우스 따라 미세하게 움직임
+        gsap.to(haloRef.value, {
+            x: x * 10,
+            y: y * 10,
+            filter: `blur(${15 + Math.abs(x * 10) + Math.abs(y * 10)}px)`,
+            duration: 0.1
+        });
+    };
+
+    const onReset = () => {
+        gsap.to(cardRef.value, { rotationY: 0, rotationX: 0, scale: 1, duration: 1, ease: "elastic.out(1, 0.3)" });
+        gsap.to(glareRef.value, { opacity: 0 });
+        gsap.to(haloRef.value, { x: 0, y: 0, filter: 'blur(15px)', duration: 0.5 });
+    };
+</script>
+
+<style scoped>
+    .kinetic-stage {
+        display: inline-block;
+        font-family: 'Electrolize', sans-serif;
+        /* 미래지향적인 폰트 */
+    }
+
+    .card-scene {
+        perspective: 1500px;
+        width: 100%;
+    }
+
+    .energy-card {
+        width: 100%;
+        aspect-ratio: 1 / 1.5;
+        position: relative;
+        background: #1a1a1a;
+        /* 어두운 기본 배경으로 밝은 빛 강조 */
+        border-radius: 1em;
+        overflow: hidden;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        transform-style: preserve-3d;
+        box-shadow: 0 2em 5em rgba(0, 0, 0, 0.4);
+    }
+
+    /* 배경: 플라즈마 흐름 */
+    .plasma-bg {
+        position: absolute;
+        inset: -20%;
+        /* 더 넓게 퍼지도록 */
+        background: linear-gradient(45deg,
+                #ff6b6b 0%,
+                /* 붉은 에너지 */
+                #feca57 25%,
+                /* 오렌지 에너지 */
+                #48dbfb 50%,
+                /* 시안 에너지 */
+                #1dd1a1 75%,
+                /* 민트 에너지 */
+                #ff6b6b 100%);
+        background-size: 300% 300%;
+        animation: plasmaFlow 15s ease infinite alternate;
+        filter: blur(50px) opacity(0.6);
+        /* 흐릿하고 밝은 빛 효과 */
+    }
+
+    @keyframes plasmaFlow {
+        0% {
+            background-position: 0% 0%;
+        }
+
+        100% {
+            background-position: 100% 100%;
+        }
+    }
+
+    /* 크리스탈 오버레이 (성능 저하 주의) */
+    .ace-card .shield-frame {
+        background: transparent;
+    }
+
+    .ace-card .shield-frame::after {
+        position: absolute;
+        inset: 0;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect x="0" y="0" width="50" height="50" fill="%23ffffff20"/><rect x="50" y="50" width="50" height="50" fill="%23ffffff20"/></svg>');
+        background-size: 20px 20px;
+        mix-blend-mode: soft-light;
+        opacity: 0.8;
+        animation: crystalShift 30s linear infinite;
+    }
+
+    @keyframes crystalShift {
+        0% {
+            background-position: 0 0;
+        }
+
+        100% {
+            background-position: 1000px 1000px;
+        }
+    }
+
+    /* 에너지 후광 (gsap 제어) */
+    .ace-card .energy-halo {
+        display: block !important;
+    }
+
+    .energy-halo {
+        position: absolute;
+        inset: 20%;
+        /* 카드 중앙에 집중 */
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 30%, transparent 70%);
+        border-radius: 50%;
+        filter: blur(15px);
+        opacity: 0.7;
+        mix-blend-mode: overlay;
+        pointer-events: none;
+    }
+
+    .ace-card .shield-frame .card-inner {
+        position: relative;
+        z-index: 5;
+        height: 100%;
+        padding: 1.8em;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* OVR */
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .ovr-block {
+        line-height: 0.9;
+        text-align: center;
+    }
+
+    .ovr-rating {
+        font-size: 4em;
+        font-weight: 900;
+        color: #fff;
+        text-shadow: 0 0 10px #48dbfb, 0 0 20px #feca57;
+    }
+
+    .ovr-label {
+        font-size: 0.8em;
+        font-weight: 600;
+        color: #bbb;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    .pos-badge {
+        background: linear-gradient(45deg, #ff6b6b, #feca57);
+        color: #fff;
+        padding: 0.5em 1em;
+        border-radius: 0.3em;
+        font-weight: 700;
+        font-size: 0.9em;
+        box-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+        transform: translateZ(10px);
+        /* 틸트 시 튀어나오는 느낌 */
+    }
+
+    /* 사진 영역: 에너지 코어 프레임 */
+    .portrait-area {
+        margin: 1.5em 0;
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        transform: translateZ(20px);
+    }
+
+    .core-frame {
+        width: 90%;
+        height: 100%;
+        position: relative;
+        border-radius: 0.5em;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(72, 219, 251, 0.5);
+        /* 파란 에너지 테두리 */
+    }
+
+    .frame-pulse {
+        position: absolute;
+        inset: -1px;
+        /* 테두리 포함 */
+        background: radial-gradient(circle, #48dbfb 0%, transparent 70%);
+        mix-blend-mode: overlay;
+        opacity: 0;
+        animation: framePulse 3s infinite ease-out;
+        /* 은은하게 깜빡이는 효과 */
+    }
+
+    @keyframes framePulse {
+
+        0%,
+        100% {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+
+        50% {
+            opacity: 0.6;
+            transform: scale(1.1);
+        }
+    }
+
+    .player-photo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: brightness(1.1) contrast(1.1);
+    }
+
+    /* 정보 섹션 */
+    .info-section {
+        text-align: center;
+    }
+
+    .player-name {
+        font-size: 1.8em;
+        font-weight: 900;
+        color: #fff;
+        margin: 0;
+        letter-spacing: -1px;
+        text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+    }
+
+    .energy-divider {
+        width: 50%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #48dbfb, #feca57, transparent);
+        /* 에너지 바 */
+        margin: 0.6em auto;
+        box-shadow: 0 0 10px rgba(72, 219, 251, 0.5);
+    }
+
+    .player-club {
+        font-size: 0.75em;
+        color: #ccc;
+        font-weight: 600;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    /* 스탯 푸터 */
+    .stats-footer {
+        margin-top: auto;
+        display: flex;
+        justify-content: space-around;
+        padding-top: 1.2em;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .stat-unit {
+        text-align: center;
+    }
+
+    .s-label {
+        display: block;
+        font-size: 0.55em;
+        color: #999;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .s-val {
+        font-size: 1.2em;
+        font-weight: 900;
+        color: #fff;
+        text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+    }
+
+    .stat-sep {
+        width: 1px;
+        height: 1.5em;
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .specular-glare {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0;
+        z-index: 10;
+        mix-blend-mode: overlay;
+    }
+</style>

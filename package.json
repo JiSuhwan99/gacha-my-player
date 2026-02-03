@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "firebase": "^12.8.0",
+    "gsap": "^3.14.2",
     "vue": "^3.5.24",
     "vuedraggable": "^4.1.0"
   },
